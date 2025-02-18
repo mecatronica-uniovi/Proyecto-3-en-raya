@@ -114,12 +114,12 @@ void robot_plano::cinematica_directa(){
 
     R12.matriz_rotacion();
     R12.multiplicar_escalar(L12);
-    
+
     R23.matriz_rotacion();
     R23.multiplicar_escalar(L23);
     
-    P1=R01.get_columna(0)+P0;
-    P2=R12.get_columna(0)+P1;
-    P3=R23.get_columna(1)+P2;
+    P1=R01.get_columna(1)+P0;
+    P2=R12.get_columna(1)+P1;
+    P3=R23.get_columna(0)+P2;
 
 }

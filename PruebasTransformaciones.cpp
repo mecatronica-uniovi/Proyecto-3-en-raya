@@ -21,8 +21,8 @@ int main(){
 
     M0.angulo_rot_g=0;
     M1.angulo_rot_g=0;
-    M2.angulo_rot_g=90;
-    M3.angulo_rot_g=90;
+    M2.angulo_rot_g=-90;
+    M3.angulo_rot_g=-90;
 
     robot.R0=M0.matriz_rotacion();
     robot.R01=M1.matriz_rotacion();
