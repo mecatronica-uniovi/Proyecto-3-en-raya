@@ -30,7 +30,7 @@ class robot_plano{
 
         void determina_ang_eslabones(float ang_0, float ang_1, float ang_2, float ang_3);
         void determina_long_eslabones(float l0, float l01, float l12, float l23);
-        void rotacion_traslacion();      
+        void cinematica_directa();      
 };
 
 #endif
@@ -99,7 +99,7 @@ void robot_plano::determina_ang_eslabones(float ang0, float ang1, float ang2, fl
     R23.angulo_rot_g=ang_3;
 }
 
-void robot_plano::rotacion_traslacion(){
+void robot_plano::cinematica_directa(){
     R0.matriz_rotacion();
     R01.matriz_rotacion();
     R12.matriz_rotacion();

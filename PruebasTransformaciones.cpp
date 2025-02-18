@@ -52,7 +52,7 @@ int main(){
     cout<<"Traslacion de S3:"<<endl;
     robot.T23.print_matriz();
 
-    robot.rotacion_traslacion();
+    robot.cinematica_directa();
 
     cout<<"Localización final de S1:"<<endl;
     robot.P1.print_matriz();
