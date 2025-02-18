@@ -73,14 +73,20 @@ void robot_plano::determina_long_eslabones(float l0,float l01, float l12, float 
     L12=l12;
     L23=l23;
 
-    T0.set_valor(ang_0,0,0);
-    T0.set_valor(ang_0,1,0);
+    T0.set_valor(L0*cos(ang_0),0,0);
+    T0.set_valor(L0*sin(ang_0),1,0);
+
+    ang_1=M_PI*0.5-ang_0;
 
     T01.set_valor(L01*cos(ang_1),0,0);
     T01.set_valor(L01*sin(ang_1),1,0);
 
+    ang_2=ang_1-M_PI*0.5;
+
     T12.set_valor(L12*cos(ang_2),0,0);
     T12.set_valor(L12*sin(ang_2),1,0);
+
+    ang_3=-M_PI*0.5;
 
     T23.set_valor(L23*cos(ang_3),0,0);
     T23.set_valor(L23*sin(ang_3),1,0);
@@ -88,10 +94,10 @@ void robot_plano::determina_long_eslabones(float l0,float l01, float l12, float 
 }
 
 void robot_plano::determina_ang_eslabones(float ang0, float ang1, float ang2, float ang3){
-    ang_0=ang0;
-    ang_1=ang1;
-    ang_2=ang2;
-    ang_3=ang3;
+    ang_0=ang0*M_PI/180;
+    ang_1=ang1*M_PI/180;
+    ang_2=ang2*M_PI/180;
+    ang_3=ang3*M_PI/180;
 
     R0.angulo_rot_g=ang_0;
     R01.angulo_rot_g=ang_1;
@@ -101,16 +107,19 @@ void robot_plano::determina_ang_eslabones(float ang0, float ang1, float ang2, fl
 
 void robot_plano::cinematica_directa(){
     R0.matriz_rotacion();
+    R0.multiplicar_escalar(L0);
+
     R01.matriz_rotacion();
+    R01.multiplicar_escalar(L01);
+
     R12.matriz_rotacion();
+    R12.multiplicar_escalar(L12);
+    
     R23.matriz_rotacion();
+    R23.multiplicar_escalar(L23);
+    
+    P1=R01.get_columna(0)+P0;
+    P2=R12.get_columna(0)+P1;
+    P3=R23.get_columna(1)+P2;
 
-    P1.set_valor(R01.get_valor(0,0)*L01+P0.get_valor(0,0),0,0);
-    P1.set_valor(R01.get_valor(1,0)*L01+P0.get_valor(1,0),1,0);
-
-    P2.set_valor(R12.get_valor(0,0)*L12+P1.get_valor(0,0),0,0);
-    P2.set_valor(R12.get_valor(1,0)*L12+P1.get_valor(1,0),1,0);
-
-    P3.set_valor(R23.get_valor(0,0)*L23+P2.get_valor(0,0),0,0);
-    P3.set_valor(R23.get_valor(1,0)*L23+P2.get_valor(1,0),1,0);
 }

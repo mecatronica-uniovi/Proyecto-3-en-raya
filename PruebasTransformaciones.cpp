@@ -22,7 +22,7 @@ int main(){
     M0.angulo_rot_g=0;
     M1.angulo_rot_g=0;
     M2.angulo_rot_g=90;
-    M3.angulo_rot_g=-90;
+    M3.angulo_rot_g=90;
 
     robot.R0=M0.matriz_rotacion();
     robot.R01=M1.matriz_rotacion();
@@ -42,6 +42,9 @@ int main(){
     robot.R23.print_matriz();
 
     robot.determina_long_eslabones(0,125,125,90);
+
+    cout<<"Traslacion de S0:"<<endl;
+    robot.T0.print_matriz();
 
     cout<<"Traslacion de S1:"<<endl;
     robot.T01.print_matriz();

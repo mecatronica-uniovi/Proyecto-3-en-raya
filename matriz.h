@@ -27,6 +27,7 @@ class matriz{
         bool simetrica();
         void set_valor(T valor, int row, int col);
         T get_valor(int row, int col) const;
+        matriz<T> get_columna(int col);
  
     private:
         T m_ele;
@@ -208,6 +209,20 @@ T matriz<T>::get_valor(int fila, int col) const {
         throw out_of_range("Índice fuera de rango");
     }
 }
+
+
+template <typename T>
+matriz<T> matriz<T>::get_columna(int col) {
+    if (col<0 || col>=m_cols){
+        throw out_of_range("Índice de columna fuera de rango");
+    }
+    matriz<T> columna(m_rows, 1);
+    for (int i=0; i<m_rows; i++){
+        columna.set_valor(get_valor(i, col), i, 0);
+    }
+    return columna;
+}
+
 
 // Destructor
 template<typename T>
