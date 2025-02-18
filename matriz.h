@@ -138,13 +138,7 @@ void matriz<T>::delete_matriz()
 template<typename T>
 matriz<T> matriz<T>::matriz_rotacion(){
     matriz<T> result(m_rows, m_cols);
-    float angulo_rad=0;
-    if(angulo_rot_g==0){
-        angulo_rad=0;
-    }
-    else{
-        angulo_rad=angulo_rot_g*M_PI/180;
-    }
+    float angulo_rad=-angulo_rot_g*M_PI/180;
     result.m_matriz[0][0]=cos(angulo_rad);
     result.m_matriz[0][1]=-sin(angulo_rad);
     result.m_matriz[1][0]=sin(angulo_rad);
