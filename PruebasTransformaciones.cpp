@@ -73,12 +73,12 @@ int main(){
     robot.xyz.print_matriz();
 
     matriz<float> pos_act(3,1);
-    pos_act.set_valor(0,0,0);
-    pos_act.set_valor(125,1,0);
+    pos_act.set_valor(-125,0,0);
+    pos_act.set_valor(0,1,0);
     pos_act.set_valor(35,2,0);
 
     cout<<"CINEMATICA INVERSA: "<<endl;
-    cout<<"X_des=0, Y_des=125, Z_des=35"<<endl;
+    cout<<"X_des=-125, Y_des=0, Z_des=35"<<endl;
     robot.cinematica_inversa(pos_act);
     
 

@@ -191,8 +191,8 @@ void robot_plano::cinematica_inversa(matriz<float> XYZ){
 
     // cout<<"w0= "<<w0<<" ,z0= "<<z0<<endl;
 
-    float theta_0_rad=atan(y2/x2);
-    ang_0=theta_0_rad*180/M_PI-90;
+    float theta_0_rad=atan2(y2,x2);
+    ang_0=90-theta_0_rad*180/M_PI;
 
     // cout<<"El ángulo theta_0 es: "<<ang_0<<endl;
     // cout<<" "<<endl;
