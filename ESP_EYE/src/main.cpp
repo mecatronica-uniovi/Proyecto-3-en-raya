@@ -1,103 +1,11 @@
-/* #include <Arduino.h>
-#include <WiFi.h>
-
-// Configuración WiFi
-const char* ssid = "OPPO Carla";
-const char* password = "carlaflobeto";
-
-// Puerto para el servidor TCP
-const uint16_t TCP_PORT = 8080;
-
-// Crear instancia de servidor WiFi
-WiFiServer tcpServer(TCP_PORT);
-WiFiClient tcpClient;
-
-void setup() {
-  // Inicializar puerto serie
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("\nESP32 Socket Server para MATLAB");
-  
-  // Conectar a WiFi
-  Serial.printf("Conectando a %s ", ssid);
-  WiFi.begin(ssid, password);
-  
-  // Esperar a que se conecte WiFi
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  
-  // Mostrar IP asignada
-  Serial.println();
-  Serial.print("Conectado! Dirección IP: ");
-  Serial.println(WiFi.localIP());
-  
-  // Iniciar servidor TCP
-  tcpServer.begin();
-  Serial.printf("Servidor TCP iniciado en puerto %d\n", TCP_PORT);
-  Serial.println("Esperando conexiones de MATLAB...");
-}
-
-void loop() {
-  // Comprobar si hay clientes TCP nuevos
-  if (tcpServer.hasClient()) {
-    // Si ya existe un cliente conectado, desconectarlo
-    if (tcpClient) {
-      tcpClient.stop();
-      Serial.println("Cliente previo desconectado");
-    }
-    
-    // Conectar con el nuevo cliente
-    tcpClient = tcpServer.available();
-    Serial.println("Nuevo cliente conectado");
-  }
-  
-  // Comprobar si hay datos disponibles del cliente
-  if (tcpClient && tcpClient.connected()) {
-    if (tcpClient.available()) {
-      // Leer el mensaje enviado desde MATLAB
-      String message = tcpClient.readStringUntil('\n');
-      // Mostrar el mensaje recibido
-      Serial.print("Mensaje recibido de MATLAB: ");
-      Serial.println(message);
-      
-      // Enviar confirmación de vuelta a MATLAB
-      tcpClient.println("ESP32 recibió: " + message);
-    }
-  }
-  
-  // Pequeña pausa para estabilidad
-  delay(10);
-} */
-
-
-/* #include <Arduino.h>
-
-void setup()
-{
-  Serial.begin(115200);
-  Serial.println("Iniciando ESP");
-  pinMode(21, OUTPUT);
-  pinMode(22, OUTPUT);
-  digitalWrite(21, LOW); // Led blanco
-  digitalWrite(22, HIGH);
-  delay(1000);
-  Serial.println("Leds encendidos");
-}
-
-void loop()
-{
-
-} */
-
 #include <Arduino.h>
 #include <WiFi.h>
 #include "esp_camera.h"
+#include <algorithm>  // Para usar la función std::min
 
 const char* ssid = "OPPO Carla";
 const char* password = "carlaflobeto";
-const char* serverIP = "192.168.201.203";  // IP de tu PC con MATLAB
+const char* serverIP = "192.168.12.203";  // IP de tu PC con MATLAB
 const int serverPort = 5000;  // Puerto donde escuchará MATLAB
 
 // Pines de cámara
@@ -123,13 +31,17 @@ const int serverPort = 5000;  // Puerto donde escuchará MATLAB
 
 WiFiServer server(serverPort);
 
+unsigned long lastCapture = 0;
+const unsigned long MAX_IMAGE_AGE = 1000; 
+
+camera_fb_t *fb = NULL; 
+camera_config_t config;
+
 void setup() {
     Serial.begin(115200);
 
 
     // Configuración de la cámara
-
-    camera_config_t config;
     config.ledc_channel = LEDC_CHANNEL_0;
     config.ledc_timer = LEDC_TIMER_0;
     config.pin_d0 = Y2_GPIO_NUM;
@@ -154,8 +66,8 @@ void setup() {
     //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
     config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
     config.fb_location = CAMERA_FB_IN_PSRAM;
-    config.jpeg_quality = 12;
-    config.fb_count = 1;
+    config.jpeg_quality = 10; // calidad de la imagen (0-63, menor es mejor)
+    config.fb_count = 1; // número de buffers de fotogramas (1-2)
 
 
     pinMode(13, INPUT_PULLUP);
@@ -181,35 +93,86 @@ void setup() {
     Serial.printf("Servidor iniciado en puerto %d\n", serverPort);
 }
 
-void loop() {
-    WiFiClient client = server.available();  // Espera conexión de MATLAB
-    if (client) {
-        Serial.println("Cliente conectado!");
 
-        while (client.connected()) {
-            if (client.available()) {
-                char request = client.read();  // Espera una petición
-                if (request == 'C') {  // MATLAB envía 'C' para capturar imagen
-                    Serial.println("Capturando imagen...");
-                    camera_fb_t *fb = esp_camera_fb_get();
+// Función para obtener siempre la imagen más reciente
+camera_fb_t* get_latest_frame() {
+    camera_fb_t *fb = NULL;
+    
+    // Si tenemos fb_count > 1, necesitamos vaciar la cola
+    for (int i = 0; i < config.fb_count - 1; i++) {
+        fb = esp_camera_fb_get();
+        if (fb) {
+            // Si no es el último frame, lo liberamos
+            esp_camera_fb_return(fb);
+            fb = NULL;
+        }
+    }
+    
+    // Obtenemos el último frame
+    fb = esp_camera_fb_get();
+    
+    // Verificamos la edad de la imagen usando el timestamp
+    if (fb) {
+        // Comprobamos si la imagen es reciente usando el timestamp
+        unsigned long currentTime = millis();
+        unsigned long imageTime = fb->timestamp.tv_sec * 1000 + fb->timestamp.tv_usec / 1000;
+        unsigned long imageAge = currentTime - imageTime;
+        
+        Serial.printf("Edad de la imagen: %lu ms\n", imageAge);
+        
+        // Si la imagen es demasiado antigua, capturamos una nueva
+        if (imageAge > MAX_IMAGE_AGE) {
+            Serial.println("Imagen demasiado antigua, capturando una nueva");
+            esp_camera_fb_return(fb);
+            
+            // Esperamos un poco para que la cámara se actualice
+            delay(100);
+            
+            // Intentamos de nuevo
+            return get_latest_frame();
+        }
+    }
+    
+    return fb;
+}
+
+void loop() {
+    WiFiClient client = server.available();  // Verificar si hay un cliente disponible
+    if (!client) return;  // Si no hay cliente, salir del loop
+
+    Serial.println("Cliente conectado!");
+
+    while (client.connected()) {
+        if (client.available()) {
+            char request = client.read();  // Leer la petición del cliente
+            if (request == 'C') {  // Si la petición es 'C', capturar imagen
+                    camera_fb_t *fb = get_latest_frame(); // Obtener el fotograma más reciente
+
                     if (!fb) {
                         Serial.println("Error al capturar la imagen");
+                        client.write("E", 1);  // Enviar un error al cliente
                         continue;
                     }
 
                     // Enviar tamaño de la imagen primero
                     uint32_t imgSize = fb->len;
-                    client.write((uint8_t*)&imgSize, sizeof(imgSize));
+                    if (client.write((uint8_t*)&imgSize, sizeof(imgSize)) != sizeof(imgSize)) {
+                        Serial.println("Error al enviar tamaño de la imagen");
+                        esp_camera_fb_return(fb);  // Liberar memoria
+                        break;
+                    }
 
-                    // Enviar la imagen en sí
-                    client.write(fb->buf, fb->len);
-                    Serial.println("Imagen enviada a MATLAB");
+                    // Enviar la imagen completa de una vez
+                    if (client.write(fb->buf, fb->len) != fb->len) {
+                        Serial.println("Error al enviar la imagen");
+                    } else {
+                        Serial.println("Imagen enviada correctamente");
+                        lastCapture = millis(); // Actualizar el tiempo de la última captura
+                    }
 
                     esp_camera_fb_return(fb);  // Liberar memoria
+                    fb=NULL;
                 }
             }
         }
-        client.stop();
-        Serial.println("Cliente desconectado");
-    }
 }
