@@ -5,7 +5,7 @@
 
 const char* ssid = "OPPO Carla";
 const char* password = "carlaflobeto";
-const char* serverIP = "192.168.12.203";  // IP de tu PC con MATLAB
+const char* serverIP = "192.168.176.20";  // IP de tu PC con MATLAB
 const int serverPort = 5000;  // Puerto donde escuchará MATLAB
 
 // Pines de cámara
@@ -14,7 +14,6 @@ const int serverPort = 5000;  // Puerto donde escuchará MATLAB
 #define XCLK_GPIO_NUM  4
 #define SIOD_GPIO_NUM  18
 #define SIOC_GPIO_NUM  23
-
 #define Y9_GPIO_NUM    36
 #define Y8_GPIO_NUM    37
 #define Y7_GPIO_NUM    38
@@ -162,7 +161,7 @@ void loop() {
                         break;
                     }
 
-                    // Enviar la imagen completa de una vez
+                    // Enviar la imagen completa
                     if (client.write(fb->buf, fb->len) != fb->len) {
                         Serial.println("Error al enviar la imagen");
                     } else {
