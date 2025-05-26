@@ -168,82 +168,66 @@ void MoverFicha(enum TipoPieza tipo, struct Pos destino)
 
 int checkwinner()
 {
-    int winner;
-    int i,n;
-    int filas[3];filas[0]=_tablero.datos[1][1];filas[1]=_tablero.datos[2][1];filas[2]=_tablero.datos[3][1];
-    int columnas[3];columnas[0]=_tablero.datos[1][1];columnas[1]=_tablero.datos[1][2];columnas[2]=_tablero.datos[1][3];
-    int diagonales[2];diagonales[0]=_tablero.datos[1][1];diagonales[1]=_tablero.datos[3][1];
-    for (n=0;n<3;n++)
-    {
-        for (i=1;i<4;i++)
-        {
-            if (filas[n]==_tablero.datos[n+1][i])
-            {
-
+    //int winner = NO_PLAYER;
+    int i, n;
+    
+    // Inicialización de arrays
+    int filas[3], columnas[3];
+    for (i = 0; i < 3; i++) {  // Usar la i ya declarada
+        filas[i] = _tablero.datos[i+1][1];
+        columnas[i] = _tablero.datos[1][i+1];
+    }
+    
+    int diagonales[2];
+    diagonales[0] = _tablero.datos[1][1];
+    diagonales[1] = _tablero.datos[3][1];
+    
+    // Verificación de líneas
+    for (n = 0; n < 3; n++) {
+        for (i = 1; i < 4; i++) {
+            if (filas[n] != _tablero.datos[n+1][i]) {
+                filas[n] = NO_PIEZA;
             }
-            else
-            {
-                filas[n]=NO_PIEZA;
-            }
-            if (columnas[n]==_tablero.datos[i][n+1])
-            {
-
-            }
-            else
-            {
-                columnas[n]=NO_PIEZA;
+            if (columnas[n] != _tablero.datos[i][n+1]) {
+                columnas[n] = NO_PIEZA;
             }
         }
-
-        if (diagonales[0]==_tablero.datos[n+1][n+1])
-        {
-
+        
+        if (diagonales[0] != _tablero.datos[n+1][n+1]) {
+            diagonales[0] = NO_PIEZA;
         }
-        else
-        {
-            diagonales[0]=NO_PIEZA;
-        }
-        if (diagonales[1]==_tablero.datos[3-n][n+1])
-        {
-
-        }
-        else
-        {
-            diagonales[1]=NO_PIEZA;
+        if (diagonales[1] != _tablero.datos[3-n][n+1]) {
+            diagonales[1] = NO_PIEZA;
         }
     }
-
-    if (filas[0]!=NO_PIEZA)
-        winner=filas[0];
-    if (filas[1]!=NO_PIEZA)
-        winner=filas[1];
-    if (filas[2]!=NO_PIEZA)
-        winner=filas[2];
-    if (columnas[0]!=NO_PIEZA)
-        winner=columnas[0];
-    if (columnas[1]!=NO_PIEZA)
-        winner=columnas[1];
-    if (columnas[2]!=NO_PIEZA)
-        winner=columnas[2];
-    if (diagonales[0]!=NO_PIEZA)
-        winner=diagonales[0];
-    if (diagonales[1]!=NO_PIEZA)
-        winner=diagonales[1];
-
-    if (winner==PIEZA_O)
-    {
-        winner=PLAYER_O;
+    
+    // Verificación de ganador - retorna inmediatamente al encontrar uno
+    if (filas[0] == PIEZA_O || filas[1] == PIEZA_O || filas[2] == PIEZA_O ||
+        columnas[0] == PIEZA_O || columnas[1] == PIEZA_O || columnas[2] == PIEZA_O ||
+        diagonales[0] == PIEZA_O || diagonales[1] == PIEZA_O) {
+        return PLAYER_O;
     }
-    else if (winner==PIEZA_X)
-    {
-        winner=PLAYER_X;
+    
+    if (filas[0] == PIEZA_X || filas[1] == PIEZA_X || filas[2] == PIEZA_X ||
+        columnas[0] == PIEZA_X || columnas[1] == PIEZA_X || columnas[2] == PIEZA_X ||
+        diagonales[0] == PIEZA_X || diagonales[1] == PIEZA_X) {
+        return PLAYER_X;
     }
-    else
-    {
-        winner=NO_PLAYER;
-    }
+    return NO_PLAYER;
+}
 
-    return winner;
+// Función que comprueba si hay un empate una vez se ha completado el tablero
+int checkempate()
+{
+    int i, j;
+    for (i = 1; i < 4; i++) {
+        for (j = 1; j < 4; j++) {
+            if (_tablero.datos[i][j] == NO_PIEZA) {
+                return 0; // No hay empate, hay casillas vacías
+            }
+        }
+    }
+    return 1; // Tablero lleno, es un empate
 }
 
 /*void checkwinnable(enum TipoPieza tipo) //egoista

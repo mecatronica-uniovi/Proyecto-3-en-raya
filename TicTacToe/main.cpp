@@ -150,34 +150,41 @@ int main() //debug de IA
             ShowTablero();
         }
 
-        if (turno==PIEZA_O)
-        {
-            turno=PIEZA_X;
-        }
-        else
-        {
-            turno=PIEZA_O;
+        switch (turno) {
+            case PIEZA_O:
+            turno = PIEZA_X;
+            break;
+            case PIEZA_X:
+            turno = PIEZA_O;
+            break;
+            default:
+            break;
         }
 
         winner=checkwinner();
-
-        if (winner==PLAYER_O)
-        {
+        switch (winner) {
+            case PLAYER_O:
             printf("Victoria jugador O\n");
             printf("Reiniciando tablero\n");
             InitTablero();
             ShowTablero();
-        }
-        else if (winner==PLAYER_X)
-        {
+            break;
+            case PLAYER_X:
             printf("Victoria jugador X\n");
             printf("Reiniciando tablero\n");
             InitTablero();
             ShowTablero();
-        }
-        else
-        {
-
+            break;
+            case NO_PLAYER:
+            int empate = checkempate();
+            if (empate) {
+                printf("Empate\n");
+                InitTablero();
+                ShowTablero();
+            } else {
+                printf("No hay ganador\n");
+            }
+            break;
         }
 
         if (strstr(input,"r")!=NULL) //si el input es la tecla r

@@ -61,4 +61,7 @@ Pos pick_winable(Ganador player);
 //selecciona una casilla vacia sin importar cual
 Pos pick_nopieza();
 
+// Función que comprueba si hay un empate
+int checkempate();
+
 #endif // _INC_TABLERO_H
