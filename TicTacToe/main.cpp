@@ -7,9 +7,11 @@ struct Tablero _tablero;
 
 int main1()
 {
-    _tablero.filas[0]=BOTH_PLAYERS;_tablero.filas[1]=BOTH_PLAYERS;_tablero.filas[2]=BOTH_PLAYERS;
-    _tablero.columnas[0]=BOTH_PLAYERS;_tablero.columnas[1]=BOTH_PLAYERS;_tablero.columnas[2]=BOTH_PLAYERS;
-    _tablero.diagonales[0]=BOTH_PLAYERS;_tablero.diagonales[1]=BOTH_PLAYERS;
+    for (int i = 0; i < 3; ++i) {
+        _tablero.filas[i] = BOTH_PLAYERS;
+        _tablero.columnas[i] = BOTH_PLAYERS;
+        if (i < 2) _tablero.diagonales[i] = BOTH_PLAYERS;
+    }
 
 
 
@@ -23,8 +25,7 @@ int main1()
     enum TipoPieza turno;
     turno=PIEZA_O;
 
-    int winner;
-    winner=NO_PLAYER;
+    int winner=NO_PLAYER;
     while(1)
     {
         printf("\n Introduzca su movimiento, en formato Fila;Columna (Ej. 1;1 para esquina superior izquierda): ");
@@ -91,9 +92,11 @@ int main1()
 
 int main() //debug de IA
 {
-    _tablero.filas[0]=BOTH_PLAYERS;_tablero.filas[1]=BOTH_PLAYERS;_tablero.filas[2]=BOTH_PLAYERS;
-    _tablero.columnas[0]=BOTH_PLAYERS;_tablero.columnas[1]=BOTH_PLAYERS;_tablero.columnas[2]=BOTH_PLAYERS;
-    _tablero.diagonales[0]=BOTH_PLAYERS;_tablero.diagonales[1]=BOTH_PLAYERS;
+    for (int i = 0; i < 3; ++i) {
+        _tablero.filas[i] = BOTH_PLAYERS;
+        _tablero.columnas[i] = BOTH_PLAYERS;
+        if (i < 2) _tablero.diagonales[i] = BOTH_PLAYERS;
+    }
 
 
 
@@ -107,8 +110,7 @@ int main() //debug de IA
     enum TipoPieza turno;
     turno=PIEZA_O; //el humano juega O y va primero
 
-    int winner;
-    winner=NO_PLAYER;
+    int winner=NO_PLAYER;
     while(1)
     {
         if(turno==PIEZA_O) //turno humano
@@ -152,10 +154,10 @@ int main() //debug de IA
 
         switch (turno) {
             case PIEZA_O:
-            turno = PIEZA_X;
+                turno = PIEZA_X;
             break;
             case PIEZA_X:
-            turno = PIEZA_O;
+                turno = PIEZA_O;
             break;
             default:
             break;
@@ -164,26 +166,26 @@ int main() //debug de IA
         winner=checkwinner();
         switch (winner) {
             case PLAYER_O:
-            printf("Victoria jugador O\n");
-            printf("Reiniciando tablero\n");
-            InitTablero();
-            ShowTablero();
-            break;
-            case PLAYER_X:
-            printf("Victoria jugador X\n");
-            printf("Reiniciando tablero\n");
-            InitTablero();
-            ShowTablero();
-            break;
-            case NO_PLAYER:
-            int empate = checkempate();
-            if (empate) {
-                printf("Empate\n");
+                printf("Victoria jugador O\n");
+                printf("Reiniciando tablero\n");
                 InitTablero();
                 ShowTablero();
-            } else {
-                printf("No hay ganador\n");
-            }
+            break;
+            case PLAYER_X:
+                printf("Victoria jugador X\n");
+                printf("Reiniciando tablero\n");
+                InitTablero();
+                ShowTablero();
+            break;
+            case NO_PLAYER:
+                int empate = checkempate();
+                if (empate) {
+                    printf("Empate\n");
+                    InitTablero();
+                    ShowTablero();
+                } else {
+                    printf("No hay ganador\n");
+                }
             break;
         }
 
