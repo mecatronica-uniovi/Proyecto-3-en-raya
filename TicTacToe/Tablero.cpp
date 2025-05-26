@@ -364,15 +364,18 @@ void _checkwinnable()
             {
                 //si segun memoria no es posible ganar en esta linea, no comprobar
             }
-            //si hasta el momento no habia fichas en la linea (ambos juugadores pueden ganar en ella)
-            //actualizar player EN CASO DE HABER PIEZA
-            if (_tablero.datos[i][n+1]==PIEZA_O)
+            else if(_tablero.columnas[n]==BOTH_PLAYERS)
             {
-                _tablero.columnas[n]=PLAYER_O;
-            }
-            else if (_tablero.datos[i][n+1]==PIEZA_X)
-            {
-                _tablero.columnas[n]=PLAYER_X;
+                //si hasta el momento no habia fichas en la linea (ambos jugadores pueden ganar en ella)
+                //actualizar player EN CASO DE HABER PIEZA
+                if (_tablero.datos[i][n+1]==PIEZA_O)
+                {
+                    _tablero.columnas[n]=PLAYER_O;
+                }
+                else if (_tablero.datos[i][n+1]==PIEZA_X)
+                {
+                    _tablero.columnas[n]=PLAYER_X;
+                }
             }
             else if (_tablero.columnas[n]==PLAYER_O)
             {
