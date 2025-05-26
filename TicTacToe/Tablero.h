@@ -46,4 +46,19 @@ void MoverFicha(enum TipoPieza tipo, struct Pos destino);
 int checkwinner();
 
 
+//funcion que actualiza las variables globales que recogen que jugador puede ganar en cada una de las lineas
+void _checkwinnable();
+
+//funcion que determina el movimiento que debe realizar el robot
+Pos ia(Ganador player);
+
+//funcion que comprueba si es posible ganar en un solo turno, y en caso afirmativo devuelve la casilla en que se debe jugar para lograrlo
+Pos win_now(Ganador player);
+
+//selecciona una casilla que permita acercarse a la victoria, sin especial relevancia a cual sea esta
+Pos pick_winable(Ganador player);
+
+//selecciona una casilla vacia sin importar cual
+Pos pick_nopieza();
+
 #endif // _INC_TABLERO_H

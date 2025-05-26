@@ -677,3 +677,234 @@ void checkwinnable() //version local de la funcion para simulaciones de accion
         }
     }
 }
+
+
+//funcion que determina el movimiento que debe realizar el robot
+Pos ia(Ganador player)
+{
+    Ganador adversary;
+    if (player==PLAYER_O)
+    {
+        adversary=PLAYER_X;
+    }
+    else
+    {
+        adversary=PLAYER_O;
+    }
+    struct Pos jugada;
+    jugada=win_now(player); //comprobar si alguna linea permite ganar inmediatamente
+    if (jugada.row==0) //si no habia forma de ganar en este turno, buscar otra jugada
+    {
+        //comprobar si alguna linea permite perder inmediatamente
+        jugada=win_now(adversary);
+    }
+    if (jugada.row==0) //si no habia riesgo de derrota inmediata
+    {
+        //comprobar si reconoce el estado del tablero de jugadas preprogramadas
+        //pendiente
+    }
+    if (jugada.row==0) //si aún no se ha decididido una jugada
+    {
+        //elige una casilla al azar
+        jugada=pick_winable(player); //selecciona una casilla cualquiera que permita ganar
+
+        if (jugada.row==0) //si no existe casilla que permita ganar (partida ya empatada)
+        {
+            jugada=pick_nopieza(); //elige una casilla vacia cualquiera
+        }
+    }
+    if (jugada.row==0)
+    {
+        //error en teoria inalcanzable
+        //el tablero está lleno, y por tanto no se puede jugar en ninguna casilla
+    }
+    else
+    {
+            return jugada; //fin de la función
+    }
+}
+
+//funcion que comprueba si es posible ganar en un solo turno, y en caso afirmativo devuelve la casilla en que se debe jugar para lograrlo
+Pos win_now(Ganador player)
+{
+    Pos jugada;
+    jugada.row=0;jugada.col=0; //inicializar la jugada a una posición inalcanzable
+    //se llama a variables globales, que recogen los jugadores que pueden ganar cada una de las lineas
+
+    int i,n;
+    int counter=0;
+    for(i=0;i<3;i++) //recorre las 8 posibles lineas (3 filas, 3 columnas, 2 diagonales)
+    {
+        //filas
+            jugada.row=i+1;
+            if (_tablero.filas[i]==player) //si el unico que puede ganar en la linea es el player
+            {
+                for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+                {
+                    if (_tablero.datos[jugada.row][n]==NO_PIEZA) //si la casilla está vacía
+                    {
+                        counter++; //incrementar el contador
+                        jugada.col=n; //almacenar la casilla en memoria
+                    }
+                }
+                //despues de comprobar la linea completa
+                if (counter==1) //si solo hay una casilla vacia, en una linea en la que es posible ganar, jugar en ella permite ganar
+                {
+                    return jugada;
+                }
+            }
+        //columnas
+            jugada.col=i+1;
+            if (_tablero.columnas[i]==player) //si el unico que puede ganar en la linea es el player
+            {
+                for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+                {
+                    if (_tablero.datos[n][jugada.col]==NO_PIEZA) //si la casilla está vacía
+                    {
+                        counter++; //incrementar el contador
+                        jugada.row=n; //almacenar la casilla en memoria
+                    }
+                }
+                //despues de comprobar la linea completa
+                if (counter==1) //si solo hay una casilla vacia, en una linea en la que es posible ganar, jugar en ella permite ganar
+                {
+                    return jugada;
+                }
+            }
+        //diagonales
+            if (i==0) //solo en la primera iteración
+            {
+                if(_tablero.diagonales[0]==player) //si el unico que puede ganar en la linea es el player
+                {
+                    for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+                    {
+                        if (_tablero.datos[n][n]==NO_PIEZA) //si la casilla está vacía
+                        {
+                            counter++; //incrementar el contador
+                            jugada.row=n; //almacenar la casilla en memoria
+                        }
+                    }
+                    //despues de comprobar la linea completa
+                    if (counter==1) //si solo hay una casilla vacia, en una linea en la que es posible ganar, jugar en ella permite ganar
+                    {
+                        jugada.col=jugada.row;
+                        return jugada;
+                    }
+                }
+                if(_tablero.diagonales[1]==player) //si el unico que puede ganar en la linea es el player
+                {
+                    for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+                    {
+                        if (_tablero.datos[n][3-n]==NO_PIEZA) //si la casilla está vacía
+                        {
+                            counter++; //incrementar el contador
+                            jugada.row=n; //almacenar la casilla en memoria
+                        }
+                    }
+                    //despues de comprobar la linea completa
+                    if (counter==1) //si solo hay una casilla vacia, en una linea en la que es posible ganar, jugar en ella permite ganar
+                    {
+                        jugada.col=3-jugada.row;
+                        return jugada;
+                    }
+                }
+            }
+        jugada.row=0;jugada.col=0;
+    } //si no ha encontrado ninguna jugada ganadora, devuelve (0,0), posición no jugable, para indicarlo
+
+    return jugada;
+}
+
+//selecciona una casilla que permita acercarse a la victoria, sin especial relevancia a cual sea esta
+Pos pick_winable(Ganador player)
+{
+    Pos jugada;
+    jugada.row=0;jugada.col=0; //inicializar la jugada a una posición inalcanzable
+    //se llama a variables globales, que recogen los jugadores que pueden ganar cada una de las lineas
+
+    int i,n;
+    for(i=0;i<3;i++) //recorre las 8 posibles lineas (3 filas, 3 columnas, 2 diagonales)
+    {
+        //filas
+        jugada.row=i+1;
+        if (_tablero.filas[i]==player) //si el unico que puede ganar en la linea es el player
+        {
+            for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+            {
+                if (_tablero.datos[jugada.row][n]==NO_PIEZA) //si la casilla está vacía
+                {
+                    jugada.col=n; //almacenar la casilla en memoria
+                    return jugada;
+                }
+            }
+        }
+        //columnas
+        jugada.col=i+1;
+        if (_tablero.columnas[i]==player) //si el unico que puede ganar en la linea es el player
+        {
+            for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+            {
+                if (_tablero.datos[n][jugada.col]==NO_PIEZA) //si la casilla está vacía
+                {
+                    jugada.row=n; //almacenar la casilla en memoria
+                    return jugada;
+                }
+            }
+        }
+        //diagonales
+        if (i==0) //solo en la primera iteración (da prioridad a las diagonales, estrategicamente mas utiles que otras lineas)
+        {
+            if(_tablero.diagonales[0]==player) //si el unico que puede ganar en la linea es el player
+            {
+                for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+                {
+                    if (_tablero.datos[n][n]==NO_PIEZA) //si la casilla está vacía
+                    {
+                        jugada.row=n; //almacenar la casilla en memoria
+                        jugada.col=jugada.row;
+                        return jugada;
+                    }
+                }
+            }
+            if(_tablero.diagonales[1]==player) //si el unico que puede ganar en la linea es el player
+            {
+                for (n=1;n<4;n++) //recorrer todas las casillas de la linea
+                {
+                    if (_tablero.datos[n][3-n]==NO_PIEZA) //si la casilla está vacía
+                    {
+                        jugada.row=n; //almacenar la casilla en memoria
+                        jugada.col=3-jugada.row;
+                        return jugada;
+                    }
+                }
+            }
+        }
+        jugada.row=0;jugada.col=0;
+    } //si no ha encontrado ninguna jugada ganadora, devuelve (0,0), posición no jugable, para indicarlo
+
+    return jugada;
+}
+
+//selecciona una casilla vacia sin importar cual
+Pos pick_nopieza()
+{
+    Pos jugada;
+    jugada.row=0;jugada.col=0; //inicializar la jugada a una posición inalcanzable
+
+    int i,n;
+    for (i=1;i<4;i++) //recorre todas las filas
+    {
+        for(n=1;n<4;n++) //recorre todas las columnas de la fila actual
+        {
+            if(_tablero.datos[i][n]==NO_PIEZA) //si la casilla está vacia
+            {
+                //es una casilla sin pieza, el objetivo de la función
+                jugada.row=i;
+                jugada.col=n;
+                return jugada;
+            }
+        }
+    }
+
+    return jugada; //si no encuentra una casilla vacía, devuelve (0,0), posición no jugable, para indicarlo
+}
