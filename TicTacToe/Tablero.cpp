@@ -499,7 +499,7 @@ Pos win_now(Ganador player)
             {
                 for (n=1;n<4;n++) //recorrer todas las casillas de la linea
                 {
-                    if (_tablero.datos[jugada.row][n]==NO_PIEZA) //si la casilla está vacía
+                    if (casilla_vacia({jugada.row, n})) //si la casilla está vacía
                     {
                         counter++; //incrementar el contador
                         jugada.col=n; //almacenar la casilla en memoria
@@ -517,7 +517,7 @@ Pos win_now(Ganador player)
             {
                 for (n=1;n<4;n++) //recorrer todas las casillas de la linea
                 {
-                    if (_tablero.datos[n][jugada.col]==NO_PIEZA) //si la casilla está vacía
+                    if (casilla_vacia({n, jugada.col})) //si la casilla está vacía
                     {
                         counter++; //incrementar el contador
                         jugada.row=n; //almacenar la casilla en memoria
@@ -536,7 +536,7 @@ Pos win_now(Ganador player)
                 {
                     for (n=1;n<4;n++) //recorrer todas las casillas de la linea
                     {
-                        if (_tablero.datos[n][n]==NO_PIEZA) //si la casilla está vacía
+                        if (casilla_vacia({n, n})) //si la casilla está vacía
                         {
                             counter++; //incrementar el contador
                             jugada.row=n; //almacenar la casilla en memoria
@@ -553,7 +553,7 @@ Pos win_now(Ganador player)
                 {
                     for (n=1;n<4;n++) //recorrer todas las casillas de la linea
                     {
-                        if (_tablero.datos[n][3-n]==NO_PIEZA) //si la casilla está vacía
+                        if (casilla_vacia({n, 3-n})) //si la casilla está vacía
                         {
                             counter++; //incrementar el contador
                             jugada.row=n; //almacenar la casilla en memoria
@@ -589,7 +589,7 @@ Pos pick_winable(Ganador player)
         {
             for (n=1;n<4;n++) //recorrer todas las casillas de la linea
             {
-                if (_tablero.datos[jugada.row][n]==NO_PIEZA) //si la casilla está vacía
+                if (casilla_vacia({jugada.row, n})) //si la casilla está vacía
                 {
                     jugada.col=n; //almacenar la casilla en memoria
                     return jugada;
@@ -602,7 +602,7 @@ Pos pick_winable(Ganador player)
         {
             for (n=1;n<4;n++) //recorrer todas las casillas de la linea
             {
-                if (_tablero.datos[n][jugada.col]==NO_PIEZA) //si la casilla está vacía
+                if (casilla_vacia({n, jugada.col})) //si la casilla está vacía
                 {
                     jugada.row=n; //almacenar la casilla en memoria
                     return jugada;
@@ -616,7 +616,7 @@ Pos pick_winable(Ganador player)
             {
                 for (n=1;n<4;n++) //recorrer todas las casillas de la linea
                 {
-                    if (_tablero.datos[n][n]==NO_PIEZA) //si la casilla está vacía
+                    if (casilla_vacia({n, n})) //si la casilla está vacía
                     {
                         jugada.row=n; //almacenar la casilla en memoria
                         jugada.col=jugada.row;
@@ -666,3 +666,14 @@ Pos pick_nopieza()
 
     return jugada; //si no encuentra una casilla vacía, devuelve (0,0), posición no jugable, para indicarlo
 }
+
+// Función que comprueba que la casilla está vacía
+int casilla_vacia(Pos pos)
+{
+    // Devuelve 1 si la casilla está vacía (NO_PIEZA), 0 en caso contrario o fuera de rango
+    if (pos.row < 1 || pos.row > 3 || pos.col < 1 || pos.col > 3) {
+        return 0; // Casilla fuera de rango
+    }
+    return _tablero.datos[pos.row][pos.col] == NO_PIEZA;
+}
+

@@ -119,7 +119,6 @@ int main() //debug de IA
             printf("\n Introduzca su movimiento, en formato Fila;Columna (Ej. 1;1 para esquina superior izquierda): ");
             gets(input);
             printf("\n");
-
             if (strstr(input,"r")!=NULL) //si el input es la tecla r
             {
                 //reiniciar
@@ -139,6 +138,11 @@ int main() //debug de IA
                 dest.row=atoi(cmd);
                 cmd=strstr(cmd,";");
                 dest.col=atoi(cmd+1);
+            }
+            if (casilla_vacia(dest) == 0) {
+                printf("Movimiento no valido, casilla ocupada o no valida\n");
+                ShowTablero();
+                continue; //vuelve al inicio del bucle
             }
         }
         else //turno ia

@@ -64,4 +64,7 @@ Pos pick_nopieza();
 // Función que comprueba si hay un empate
 int checkempate();
 
+// Función que comprueba si una casilla está vacía
+int casilla_vacia(Pos pos);
+
 #endif // _INC_TABLERO_H
