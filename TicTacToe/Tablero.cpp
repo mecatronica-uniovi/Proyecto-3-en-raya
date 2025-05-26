@@ -385,164 +385,51 @@ void _checkwinnable()
 */
 //que es una seccion de codigo que se repite 4 veces (con modificacion de variables, pero mismo codigo)
 
-void checkwinnable() //version local de la funcion para simulaciones de accion
+// Versión compacta de checkwinnable sin función auxiliar
+void checkwinnable()
 {
-    int filas[3];filas[0]=_tablero.filas[0];filas[1]=_tablero.filas[1];filas[2]=_tablero.filas[2];
-    int columnas[3];columnas[0]=_tablero.columnas[0];columnas[1]=_tablero.columnas[1];columnas[2]=_tablero.columnas[2];
-    int diagonales[2];diagonales[0]=_tablero.diagonales[0];diagonales[1]=_tablero.diagonales[1];
-    int i,n;
-    for (n=0;n<3;n++)
-    {
-        for (i=1;i<4;i++)
-        {
-            //comprobacion de filas
-
-            if (filas[n]==NO_PLAYER)
-            {
-                //si segun memoria no es posible ganar en esta linea, no comprobar
-            }
-            else if (filas[n]==BOTH_PLAYERS)
-            {
-                //si hasta el momento no habia fichas en la linea (ambos juugadores pueden ganar en ella)
-                //actualizar player EN CASO DE HABER PIEZA
-                if (_tablero.datos[n+1][i]==PIEZA_O)
-                {
-                    filas[n]=PLAYER_O;
-                }
-                else if (_tablero.datos[n+1][i]==PIEZA_X)
-                {
-                    filas[n]=PLAYER_X;
+    int filas[3] = {_tablero.filas[0], _tablero.filas[1], _tablero.filas[2]};
+    int columnas[3] = {_tablero.columnas[0], _tablero.columnas[1], _tablero.columnas[2]};
+    int diagonales[2] = {_tablero.diagonales[0], _tablero.diagonales[1]};
+    for (int n = 0; n < 3; n++) {
+        for (int i = 1; i < 4; i++) {
+            // Filas
+            if (filas[n] != NO_PLAYER) {
+                if (filas[n] == BOTH_PLAYERS) {
+                    if (_tablero.datos[n+1][i] == PIEZA_O) filas[n] = PLAYER_O;
+                    else if (_tablero.datos[n+1][i] == PIEZA_X) filas[n] = PLAYER_X;
+                } else if ((filas[n] == PLAYER_O && _tablero.datos[n+1][i] == PIEZA_X) ||
+                           (filas[n] == PLAYER_X && _tablero.datos[n+1][i] == PIEZA_O)) {
+                    filas[n] = NO_PLAYER;
                 }
             }
-            else if (filas[n]==PLAYER_O)
-            {
-                //si en esta linea solo puede ganar player O
-                if (_tablero.datos[n+1][i]==PIEZA_X)
-                {
-                    //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                    filas[n]=NO_PLAYER;
+            // Columnas
+            if (columnas[n] != NO_PLAYER) {
+                if (columnas[n] == BOTH_PLAYERS) {
+                    if (_tablero.datos[i][n+1] == PIEZA_O) columnas[n] = PLAYER_O;
+                    else if (_tablero.datos[i][n+1] == PIEZA_X) columnas[n] = PLAYER_X;
+                } else if ((columnas[n] == PLAYER_O && _tablero.datos[i][n+1] == PIEZA_X) ||
+                           (columnas[n] == PLAYER_X && _tablero.datos[i][n+1] == PIEZA_O)) {
+                    columnas[n] = NO_PLAYER;
                 }
             }
-            else if (filas[n]==PLAYER_X)
-            {
-                //si en esta linea solo puede ganar player X
-                if (_tablero.datos[n+1][i]==PIEZA_O)
-                {
-                    //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                    filas[n]=NO_PLAYER;
+            // Diagonales
+            if (n == 0 && diagonales[0] != NO_PLAYER) {
+                if (diagonales[0] == BOTH_PLAYERS) {
+                    if (_tablero.datos[i][i] == PIEZA_O) diagonales[0] = PLAYER_O;
+                    else if (_tablero.datos[i][i] == PIEZA_X) diagonales[0] = PLAYER_X;
+                } else if ((diagonales[0] == PLAYER_O && _tablero.datos[i][i] == PIEZA_X) ||
+                           (diagonales[0] == PLAYER_X && _tablero.datos[i][i] == PIEZA_O)) {
+                    diagonales[0] = NO_PLAYER;
                 }
             }
-
-            //comprobacion de columnas
-
-            if(columnas[n]==NO_PLAYER)
-            {
-                //si segun memoria no es posible ganar en esta linea, no comprobar
-            }
-            //si hasta el momento no habia fichas en la linea (ambos juugadores pueden ganar en ella)
-            //actualizar player EN CASO DE HABER PIEZA
-            if (_tablero.datos[i][n+1]==PIEZA_O)
-            {
-                columnas[n]=PLAYER_O;
-            }
-            else if (_tablero.datos[i][n+1]==PIEZA_X)
-            {
-                columnas[n]=PLAYER_X;
-            }
-            else if (columnas[n]==PLAYER_O)
-            {
-                //si en esta linea solo puede ganar player O
-                if (_tablero.datos[i][n+1]==PIEZA_X)
-                {
-                    //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                    columnas[n]=NO_PLAYER;
-                }
-            }
-            else if (columnas[n]==PLAYER_X)
-            {
-                //si en esta linea solo puede ganar player X
-                if (_tablero.datos[i][n+1]==PIEZA_O)
-                {
-                    //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                    columnas[n]=NO_PLAYER;
-                }
-            }
-
-            //comprobacion de diagonales
-            if (n==0)
-            {
-                if (diagonales[n]==NO_PLAYER)
-                {
-                    //si segun memoria no es posible ganar en esta linea, no comprobar
-                }
-                else if (diagonales[n]==BOTH_PLAYERS)
-                {
-                    //si hasta el momento no habia fichas en la linea (ambos juugadores pueden ganar en ella)
-                    //actualizar player EN CASO DE HABER PIEZA
-                    if (_tablero.datos[i][i]==PIEZA_O)
-                    {
-                        diagonales[n]=PLAYER_O;
-                    }
-                    else if (_tablero.datos[i][i]==PIEZA_X)
-                    {
-                        diagonales[n]=PLAYER_X;
-                    }
-                }
-                else if (diagonales[n]==PLAYER_O)
-                {
-                    //si en esta linea solo puede ganar player O
-                    if (_tablero.datos[i][i]==PIEZA_X)
-                    {
-                        //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                        diagonales[n]=NO_PLAYER;
-                    }
-                }
-                else if (diagonales[n]==PLAYER_X)
-                {
-                    //si en esta linea solo puede ganar player X
-                    if (_tablero.datos[i][i]==PIEZA_O)
-                    {
-                        //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                        diagonales[n]=NO_PLAYER;
-                    }
-                }
-            }
-            else if (n==1)
-            {
-                if (diagonales[n]==NO_PLAYER)
-                {
-                    //si segun memoria no es posible ganar en esta linea, no comprobar
-                }
-                else if (diagonales[n]==BOTH_PLAYERS)
-                {
-                    //si hasta el momento no habia fichas en la linea (ambos juugadores pueden ganar en ella)
-                    //actualizar player EN CASO DE HABER PIEZA
-                    if (_tablero.datos[4-i][i]==PIEZA_O)
-                    {
-                        diagonales[n]=PLAYER_O;
-                    }
-                    else if (_tablero.datos[4-i][i]==PIEZA_X)
-                    {
-                        diagonales[n]=PLAYER_X;
-                    }
-                }
-                else if (diagonales[n]==PLAYER_O)
-                {
-                    //si en esta linea solo puede ganar player O
-                    if (_tablero.datos[4-i][i]==PIEZA_X)
-                    {
-                        //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                        diagonales[n]=NO_PLAYER;
-                    }
-                }
-                else if (diagonales[n]==PLAYER_X)
-                {
-                    //si en esta linea solo puede ganar player X
-                    if (_tablero.datos[4-i][i]==PIEZA_O)
-                    {
-                        //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                        diagonales[n]=NO_PLAYER;
-                    }
+            if (n == 1 && diagonales[1] != NO_PLAYER) {
+                if (diagonales[1] == BOTH_PLAYERS) {
+                    if (_tablero.datos[4-i][i] == PIEZA_O) diagonales[1] = PLAYER_O;
+                    else if (_tablero.datos[4-i][i] == PIEZA_X) diagonales[1] = PLAYER_X;
+                } else if ((diagonales[1] == PLAYER_O && _tablero.datos[4-i][i] == PIEZA_X) ||
+                           (diagonales[1] == PLAYER_X && _tablero.datos[4-i][i] == PIEZA_O)) {
+                    diagonales[1] = NO_PLAYER;
                 }
             }
         }
