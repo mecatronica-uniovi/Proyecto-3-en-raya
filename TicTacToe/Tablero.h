@@ -27,6 +27,12 @@ struct Tablero {
     enum Ganador diagonales[2];
 };
 
+// Estructura para almacenar las coordenadas de origen y destino de un movimiento
+struct MovimientoCoords {
+    std::array<double, 3> origen_xyz;
+    std::array<double, 3> destino_xyz;
+};
+
 //declaracion como variable externa de la global _tablero
 extern struct Tablero _tablero;
 
@@ -73,4 +79,5 @@ std::array<double, 3> ConvertirCoordenadas(struct Pos pos);
 
 Pos ia_Nueva(Ganador player);
 
+MovimientoCoords MoverFichaDevuelveCoords(enum TipoPieza tipo, struct Pos destino);
 #endif // _INC_TABLERO_H

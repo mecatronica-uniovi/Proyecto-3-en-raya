@@ -61,18 +61,24 @@ int main() //debug de IA
                 ShowTablero();
                 continue; //vuelve al inicio del bucle
             }
+            //array<double, 3> dest_user_xyz = ConvertirCoordenadas(dest);
+            //printf("Jugador ha seleccionado la casilla: %d;%d (Coordenadas cartesianas: %.2f, %.2f, %.2f)\n", dest.row, dest.col, dest_user_xyz[0], dest_user_xyz[1], dest_user_xyz[2]);
         }
         else //turno ia
         {
             _checkwinnable();
             dest=ia_Nueva(PLAYER_X);
-            array<double, 3> dest_ia_cart = ConvertirCoordenadas(dest);
-            printf("IA ha seleccionado la casilla: %d;%d (Coordenadas cartesianas: %.2f, %.2f, %.2f)\n", dest.row, dest.col, dest_ia_cart[0], dest_ia_cart[1], dest_ia_cart[2]);
+            //array<double, 3> dest_ia_cart = ConvertirCoordenadas(dest);
+            //printf("IA ha seleccionado la casilla: %d;%d (Coordenadas cartesianas: %.2f, %.2f, %.2f)\n", dest.row, dest.col, dest_ia_cart[0], dest_ia_cart[1], dest_ia_cart[2]);
         }
         if (strstr(input,"r")==NULL) //si el input NO es la tecla r
         {
-            MoverFicha(turno,dest);
+            MovimientoCoords coords = MoverFichaDevuelveCoords(turno,dest);
             ShowTablero();
+            // El movimiento que se ha realizado va desde coords.origen_xyz a coords.destino_xyz
+            printf("Movimiento: (%.2f, %.2f, %.2f) -> (%.2f, %.2f, %.2f)\n",
+                   coords.origen_xyz[0], coords.origen_xyz[1], coords.origen_xyz[2],
+                   coords.destino_xyz[0], coords.destino_xyz[1], coords.destino_xyz[2]);
         }
 
         switch (turno) {

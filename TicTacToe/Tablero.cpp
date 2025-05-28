@@ -579,3 +579,19 @@ Pos ia_Nueva(Ganador player)
     }
 
 }
+
+MovimientoCoords MoverFichaDevuelveCoords(enum TipoPieza tipo, struct Pos destino)
+{
+    struct Pos origen;
+    MovimientoCoords coords;
+    origen=GetColPrimeraFichaDisponible(tipo);
+    if (origen.row >= 0 && origen.col >= 0) {
+        if (_tablero.datos[destino.row][destino.col] == NO_PIEZA) {
+            _tablero.datos[origen.row][origen.col] = NO_PIEZA;
+            _tablero.datos[destino.row][destino.col] = tipo;
+        }
+    }
+    coords.origen_xyz = ConvertirCoordenadas(origen);
+    coords.destino_xyz = ConvertirCoordenadas(destino);
+    return coords; // Devolver las coordenadas de destino
+}
