@@ -5,6 +5,9 @@
 #define I_ROW_O 0 //fila inicial de los circulos azules
 #define I_ROW_X 4 //fila inicial de las cruces rojas
 
+#include <array>
+#include <stdio.h>
+#include <iostream>
 //enumeracion de posibles estados de una casilla
 enum TipoPieza { PIEZA_O, PIEZA_X, NO_PIEZA, CASILLA_NO_VALIDA};
 
@@ -65,5 +68,9 @@ Pos pick_nopieza();
 
 // Función que comprueba si una casilla está vacía
 int casilla_vacia(Pos pos);
+
+std::array<double, 3> ConvertirCoordenadas(struct Pos pos);
+
+Pos ia_Nueva(Ganador player);
 
 #endif // _INC_TABLERO_H

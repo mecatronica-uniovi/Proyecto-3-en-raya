@@ -1,6 +1,7 @@
 #include "Tablero.h"
-#include <stdio.h>
+using namespace std;
 
+Tablero _tablero; // Definición de la variable global _tablero
 //funcion de interfaz en windows, no utilizada en el codigo final
 void InitTablero()
 {
@@ -510,4 +511,71 @@ int casilla_vacia(Pos pos)
         return 0; // Casilla fuera de rango
     }
     return _tablero.datos[pos.row][pos.col] == NO_PIEZA;
+}
+
+// Función que convierte coordenadas de tablero a coordenadas cartesianas
+array<double, 3> ConvertirCoordenadas(struct Pos pos) {
+    array<double, 3> pos_xyz;
+    // Definir los desplazamientos base para filas y columnas
+    // Las unidades son mm
+    const double base_x = 20.0;
+    const double base_y = 0.0;
+    const double base_z = 165.0; // La altura del tablero es constante.
+    const double step = 39.25; // Distancia entre el centro de dos casillas adyacentes
+
+    // Comprobar si la posición es válida
+    if (pos.row >= 0 && pos.row <= 4 && pos.col >= 0 && pos.col <= 4) { //Estamos dentro de los límites del tablero
+        // Calcular las coordenadas cartesianas}
+        pos_xyz[0] = base_x + step * pos.col; // x depende de la columna
+        pos_xyz[1] = base_y + step * pos.row; // y depende de la fila
+        pos_xyz[2] = base_z; // z constante
+    } else {
+        pos_xyz = {-1.0, -1.0, -1.0}; // Casilla no válida
+    }
+    return pos_xyz;
+}
+
+
+Pos ia_Nueva(Ganador player)
+{
+    Ganador adversary; //se determina cual es la pieza del jugador contrario (adversario)
+    if (player==PLAYER_O)
+    {
+        adversary=PLAYER_X;
+    } else
+    {
+        adversary=PLAYER_O;
+    }
+    struct Pos jugada;
+    jugada=win_now(player); //comprobar si alguna linea permite ganar inmediatamente
+    if (jugada.row==0) //si no habia forma de ganar en este turno, buscar otra jugada
+    {
+        //comprobar si alguna linea permite perder inmediatamente
+        jugada=win_now(adversary);
+    }
+    if (jugada.row==0) //si no habia riesgo de derrota inmediata
+    {
+        //comprobar si reconoce el estado del tablero de jugadas preprogramadas
+        //pendiente
+    }
+    if (jugada.row==0) //si aún no se ha decididido una jugada
+    {
+        //elige una casilla al azar
+        jugada=pick_winable(player); //selecciona una casilla cualquiera que permita ganar
+
+        if (jugada.row==0) //si no existe casilla que permita ganar (partida ya empatada)
+        {
+            jugada=pick_nopieza(); //elige una casilla vacia cualquiera
+        }
+    }
+    if (jugada.row==0)
+    {
+        //error en teoria inalcanzable
+        //el tablero está lleno, y por tanto no se puede jugar en ninguna casilla
+    }
+    else
+    {
+            return jugada; //fin de la función
+    }
+
 }
