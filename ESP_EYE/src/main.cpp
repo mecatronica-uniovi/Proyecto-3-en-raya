@@ -3,9 +3,9 @@
 #include "esp_camera.h"
 #include <algorithm>  // Para usar la función std::min
 
-const char* ssid = "OPPO Carla";
-const char* password = "carlaflobeto";
-const char* serverIP = "192.168.176.20";  // IP de tu PC con MATLAB
+const char* ssid = "RobotMecatronica1";
+const char* password = "mecatronica2025";
+const char* serverIP = "156.35.174.12";  // IP de tu PC con MATLAB
 const int serverPort = 5000;  // Puerto donde escuchará MATLAB
 
 // Pines de cámara
