@@ -42,9 +42,11 @@ struct Pos GetColPrimeraFichaDisponible(enum TipoPieza tipo);
 //funcion que gestiona el movimiento de fichas
 void MoverFicha(enum TipoPieza tipo, struct Pos destino);
 
-
+//funcion que comprueba si alguno de los jugadores ha ganado
 int checkwinner();
 
+// Función que comprueba si hay un empate
+int checkempate();
 
 //funcion que actualiza las variables globales que recogen que jugador puede ganar en cada una de las lineas
 void _checkwinnable();
@@ -60,9 +62,6 @@ Pos pick_winable(Ganador player);
 
 //selecciona una casilla vacia sin importar cual
 Pos pick_nopieza();
-
-// Función que comprueba si hay un empate
-int checkempate();
 
 // Función que comprueba si una casilla está vacía
 int casilla_vacia(Pos pos);

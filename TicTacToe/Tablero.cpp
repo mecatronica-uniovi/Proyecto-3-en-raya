@@ -1,6 +1,7 @@
 #include "Tablero.h"
 #include <stdio.h>
 
+//funcion de interfaz en windows, no utilizada en el codigo final
 void InitTablero()
 {
     int row,col;
@@ -18,13 +19,7 @@ void InitTablero()
     }
 }
 
-/*void ShowTablero()
-{
-    char txt[40];
-    TableroAString(txt);
-    printf(txt);
-}*/
-
+//funcion de interfaz en windows, no utilizada en el codigo final
 void ShowTablero()
 {
     int row,col;
@@ -75,6 +70,7 @@ void ShowTablero()
     printf("\n");
 }
 
+//funcion que escribe el estado del tablero como una cadena de caracteres
 void TableroAString(char dest[]) //esta funcion no solo es util para mostrar en pantalla, genera una cadena utilizable para transmitir informacion a otros dispositivos
 {
     int row,col;
@@ -111,12 +107,13 @@ void TableroAString(char dest[]) //esta funcion no solo es util para mostrar en 
     }
 }
 
+//funcion que busca la posicion de una ficha aun no jugada
 struct Pos GetColPrimeraFichaDisponible(enum TipoPieza tipo)
 {
     int noficha;
     struct Pos pos;
     pos.row=-1;
-    pos.col=-1; //el fallo es este, no se sobreescribe la columna
+    pos.col=-1;
     switch (tipo)
     {
     case NO_PIEZA:
@@ -152,6 +149,7 @@ struct Pos GetColPrimeraFichaDisponible(enum TipoPieza tipo)
     return pos;
 }
 
+//funcion que desplaza una ficha del tipo indicado a la posicion de destino deseada
 void MoverFicha(enum TipoPieza tipo, struct Pos destino)
 {
     struct Pos origen;
@@ -166,9 +164,9 @@ void MoverFicha(enum TipoPieza tipo, struct Pos destino)
     }
 }
 
+//funcion que comprueba si alguno de los jugadores ha ganado
 int checkwinner()
 {
-    //int winner = NO_PLAYER;
     int i, n;
     
     // Inicialización de arrays
@@ -230,73 +228,7 @@ int checkempate()
     return 1; // Tablero lleno, es un empate
 }
 
-/*void checkwinnable(enum TipoPieza tipo) //egoista
-{
-    int adversary;
-    if (tipo==PIEZA_X)
-    {
-        adversary=PIEZA_O;
-    }
-    else
-    {
-        adversary=PIEZA_X;
-    }
-    int i,n;
-    int filas[3];filas[0]=0;filas[1]=0;filas[2]=0;
-    int columnas[3];columnas[0]=0;columnas[1]=0;columnas[2]=0;
-    int diagonales[2];diagonales[0]=0;diagonales[1]=0;
-    for (n=0;n<3;n++)
-    {
-        for (i=1;i<4;i++)
-        {
-            if ((_tablero.datos[i][1]!=adversary)&&(filas[n]!=NO_PLAYER))
-            {
-                if (_tablero.datos[i][1]==tipo)
-                {
-                    filas[n]++;
-                }
-                //mientras no haya una pieza del adversario bloqueando la linea
-            }
-            else
-            {
-                filas[n]=NO_PLAYER;
-            }
-            if ((_tablero.datos[1][i]!=adversary)&&(columnas[n]!=NO_PLAYER))
-            {
-                if (_tablero.datos[1][i]==tipo)
-                {
-                    columnas[n]++;
-                }
-            }
-            else
-            {
-                columnas[n]=NO_PLAYER;
-            }
-        }
-
-        if ((_tablero.datos[n+1][n+1]!=adversary)&&(diagonales[0]!=NO_PLAYER))
-        {
-            if (_tablero.datos[n+1][n+1]==tipo)
-                diagonales[0]++;
-        }
-        else
-        {
-            diagonales[0]=NO_PLAYER;
-        }
-        if ((_tablero.datos[3-n][n+1]!=adversary)&&(diagonales[1]!=NO_PLAYER))
-        {
-            if (_tablero.datos[3-n][n+1]==tipo)
-                diagonales[1]++;
-        }
-        else
-        {
-            diagonales[1]=NO_PLAYER;
-        }
-    }
-}*/
-
-
-
+//funcion que actualiza las variables globales sobre que jugador puede ganar en cada linea
 void _checkwinnable()
 {
     for (int n = 0; n < 3; n++) {
@@ -345,107 +277,14 @@ void _checkwinnable()
     }
 }
 
-//toda la funcion anterior se podria reducir con una funcion que contenga
-/*
-                if (diagonales[n]==NO_PLAYER)
-                {
-                    //si segun memoria no es posible ganar en esta linea, no comprobar
-                }
-                else if (diagonales[n]==BOTH_PLAYERS)
-                {
-                    //si hasta el momento no habia fichas en la linea (ambos juugadores pueden ganar en ella)
-                    //actualizar player EN CASO DE HABER PIEZA
-                    if (_tablero.datos[i][i]==PIEZA_O)
-                    {
-                        diagonales[n]=PLAYER_O;
-                    }
-                    else if (_tablero.datos[i][i]==PIEZA_X)
-                    {
-                        diagonales[n]=PLAYER_X;
-                    }
-                }
-                else if (diagonales[n]==PIEZA_O)
-                {
-                    //si en esta linea solo puede ganar player O
-                    if (_tablero.datos[i][i]==PIEZA_X)
-                    {
-                        //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                        diagonales[n]=NO_PLAYER;
-                    }
-                }
-                else if (diagonales[n]==PIEZA_X)
-                {
-                    //si en esta linea solo puede ganar player X
-                    if (_tablero.datos[i][i]==PIEZA_O)
-                    {
-                        //si aparece una pieza del adversario en la linea, ya no es posible ganar en ella
-                        diagonales[n]=NO_PLAYER;
-                    }
-                }
-*/
-//que es una seccion de codigo que se repite 4 veces (con modificacion de variables, pero mismo codigo)
-
-// Versión compacta de checkwinnable sin función auxiliar
-void checkwinnable()
-{
-    int filas[3] = {_tablero.filas[0], _tablero.filas[1], _tablero.filas[2]};
-    int columnas[3] = {_tablero.columnas[0], _tablero.columnas[1], _tablero.columnas[2]};
-    int diagonales[2] = {_tablero.diagonales[0], _tablero.diagonales[1]};
-    for (int n = 0; n < 3; n++) {
-        for (int i = 1; i < 4; i++) {
-            // Filas
-            if (filas[n] != NO_PLAYER) {
-                if (filas[n] == BOTH_PLAYERS) {
-                    if (_tablero.datos[n+1][i] == PIEZA_O) filas[n] = PLAYER_O;
-                    else if (_tablero.datos[n+1][i] == PIEZA_X) filas[n] = PLAYER_X;
-                } else if ((filas[n] == PLAYER_O && _tablero.datos[n+1][i] == PIEZA_X) ||
-                           (filas[n] == PLAYER_X && _tablero.datos[n+1][i] == PIEZA_O)) {
-                    filas[n] = NO_PLAYER;
-                }
-            }
-            // Columnas
-            if (columnas[n] != NO_PLAYER) {
-                if (columnas[n] == BOTH_PLAYERS) {
-                    if (_tablero.datos[i][n+1] == PIEZA_O) columnas[n] = PLAYER_O;
-                    else if (_tablero.datos[i][n+1] == PIEZA_X) columnas[n] = PLAYER_X;
-                } else if ((columnas[n] == PLAYER_O && _tablero.datos[i][n+1] == PIEZA_X) ||
-                           (columnas[n] == PLAYER_X && _tablero.datos[i][n+1] == PIEZA_O)) {
-                    columnas[n] = NO_PLAYER;
-                }
-            }
-            // Diagonales
-            if (n == 0 && diagonales[0] != NO_PLAYER) {
-                if (diagonales[0] == BOTH_PLAYERS) {
-                    if (_tablero.datos[i][i] == PIEZA_O) diagonales[0] = PLAYER_O;
-                    else if (_tablero.datos[i][i] == PIEZA_X) diagonales[0] = PLAYER_X;
-                } else if ((diagonales[0] == PLAYER_O && _tablero.datos[i][i] == PIEZA_X) ||
-                           (diagonales[0] == PLAYER_X && _tablero.datos[i][i] == PIEZA_O)) {
-                    diagonales[0] = NO_PLAYER;
-                }
-            }
-            if (n == 1 && diagonales[1] != NO_PLAYER) {
-                if (diagonales[1] == BOTH_PLAYERS) {
-                    if (_tablero.datos[4-i][i] == PIEZA_O) diagonales[1] = PLAYER_O;
-                    else if (_tablero.datos[4-i][i] == PIEZA_X) diagonales[1] = PLAYER_X;
-                } else if ((diagonales[1] == PLAYER_O && _tablero.datos[4-i][i] == PIEZA_X) ||
-                           (diagonales[1] == PLAYER_X && _tablero.datos[4-i][i] == PIEZA_O)) {
-                    diagonales[1] = NO_PLAYER;
-                }
-            }
-        }
-    }
-}
-
-
 //funcion que determina el movimiento que debe realizar el robot
 Pos ia(Ganador player)
 {
-    Ganador adversary;
+    Ganador adversary; //se determina cual es la pieza del jugador contrario (adversario)
     if (player==PLAYER_O)
     {
         adversary=PLAYER_X;
-    }
-    else
+    } else
     {
         adversary=PLAYER_O;
     }
@@ -569,7 +408,6 @@ Pos win_now(Ganador player)
             }
         jugada.row=0;jugada.col=0;
     } //si no ha encontrado ninguna jugada ganadora, devuelve (0,0), posición no jugable, para indicarlo
-
     return jugada;
 }
 
@@ -639,7 +477,6 @@ Pos pick_winable(Ganador player)
         }
         jugada.row=0;jugada.col=0;
     } //si no ha encontrado ninguna jugada ganadora, devuelve (0,0), posición no jugable, para indicarlo
-
     return jugada;
 }
 
@@ -648,7 +485,6 @@ Pos pick_nopieza()
 {
     Pos jugada;
     jugada.row=0;jugada.col=0; //inicializar la jugada a una posición inalcanzable
-
     int i,n;
     for (i=1;i<4;i++) //recorre todas las filas
     {
@@ -663,7 +499,6 @@ Pos pick_nopieza()
             }
         }
     }
-
     return jugada; //si no encuentra una casilla vacía, devuelve (0,0), posición no jugable, para indicarlo
 }
 
@@ -676,4 +511,3 @@ int casilla_vacia(Pos pos)
     }
     return _tablero.datos[pos.row][pos.col] == NO_PIEZA;
 }
-
