@@ -1,3 +1,12 @@
+/*
+
+
+
+CÓDIGO QUE REALIZA UNA CAPTURA DE IMAGEN CUANDO SE RECIBE EL CARÁCTER 'C' POR WIFI Y ENVÍA LA IMAGEN A MATLAB
+
+
+
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include "esp_camera.h"
@@ -174,4 +183,4 @@ void loop() {
                 }
             }
         }
-}
+}*/
