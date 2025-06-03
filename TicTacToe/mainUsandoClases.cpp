@@ -48,7 +48,7 @@ int main() {
             }
         } else {
             juego._checkwinnable();
-            dest = robot.ia(tipoPiezaToGanador(turno), juego); // IA espera Ganador
+            dest = robot.ia_Nueva(tipoPiezaToGanador(turno), juego); // IA espera Ganador
         }
 
         MovimientoCoords coords = juego.MoverFichaDevuelveCoords(turno, dest);
