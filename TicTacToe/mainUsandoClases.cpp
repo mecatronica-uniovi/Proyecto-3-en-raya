@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cstring>
 
+using namespace std;
+
 // Conversión de TipoPieza a Ganador
 Ganador tipoPiezaToGanador(TipoPieza pieza) {
     switch (pieza) {
@@ -26,11 +28,11 @@ int main() {
     while (1) {
         if (turno == PIEZA_O) {
             juego._checkwinnable();
-            std::cout << "\n Introduzca su movimiento, en formato Fila;Columna (Ej. 1;1 para esquina superior izquierda): ";
-            std::cin.getline(input, 5);
-            std::cout << "\n";
+            cout << "\n Introduzca su movimiento, en formato Fila;Columna (Ej. 1;1 para esquina superior izquierda): ";
+            cin.getline(input, 5);
+            cout << "\n";
             if (strstr(input, "r") != NULL) {
-                std::cout << "Reiniciando tablero\n";
+                cout << "Reiniciando tablero\n";
                 juego.InitTablero();
                 juego.ShowTablero();
                 turno = PIEZA_O; // Reinicia el turno como en el procedural
@@ -42,7 +44,7 @@ int main() {
                 dest.col = atoi(cmd + 1);
             }
             if (juego.casilla_vacia(dest) == 0) {
-                std::cout << "Movimiento no valido, casilla ocupada o no valida\n";
+                cout << "Movimiento no valido, casilla ocupada o no valida\n";
                 juego.ShowTablero();
                 continue;
             }
@@ -52,7 +54,7 @@ int main() {
         }
 
         MovimientoCoords coords = juego.MoverFichaDevuelveCoords(turno, dest);
-        std::cout << "El movimiento que ha realizado el " << (turno == PIEZA_O ? "jugador" : "robot") << " va desde ("
+        cout << "El movimiento que ha realizado el " << (turno == PIEZA_O ? "jugador" : "robot") << " va desde ("
                   << coords.origen_xyz[0] << ", " << coords.origen_xyz[1] << ", " << coords.origen_xyz[2]
                   << ") a (" << coords.destino_xyz[0] << ", " << coords.destino_xyz[1] << ", " << coords.destino_xyz[2] << ")\n";
 
@@ -68,22 +70,22 @@ int main() {
         winner = juego.checkwinner();
         switch (winner) {
             case PLAYER_O:
-                std::cout << "Victoria jugador O\n";
-                std::cout << "Reiniciando tablero\n";
+                cout << "Victoria jugador O\n";
+                cout << "Reiniciando tablero\n";
                 juego.InitTablero();
                 juego.ShowTablero();
                 turno = PIEZA_O;
                 break;
             case PLAYER_X:
-                std::cout << "Victoria jugador X\n";
-                std::cout << "Reiniciando tablero\n";
+                cout << "Victoria jugador X\n";
+                cout << "Reiniciando tablero\n";
                 juego.InitTablero();
                 juego.ShowTablero();
                 turno = PIEZA_O;
                 break;
             case NO_PLAYER:
                 if (juego.checkempate()) {
-                    std::cout << "Empate\n";
+                    cout << "Empate\n";
                     juego.InitTablero();
                     juego.ShowTablero();
                     turno = PIEZA_O;
