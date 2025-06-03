@@ -1,9 +1,8 @@
-#include "Tablero.h"
+#include "FuncionesTablero.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
 
-struct Tablero _tablero;
 
 int main1()
 {

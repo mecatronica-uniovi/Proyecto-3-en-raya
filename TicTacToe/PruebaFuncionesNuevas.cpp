@@ -1,9 +1,10 @@
-#include "Tablero.h"
+#include "FuncionesTablero.h"
 #include <stdio.h>
 #include <array>
 #include <iostream>
 #include <cstring>
 using namespace std;
+//struct Tablero _tablero;
 
 int main() //debug de IA
 {
@@ -12,8 +13,6 @@ int main() //debug de IA
         _tablero.columnas[i] = BOTH_PLAYERS;
         if (i < 2) _tablero.diagonales[i] = BOTH_PLAYERS;
     }
-
-
 
     InitTablero();
     ShowTablero();
