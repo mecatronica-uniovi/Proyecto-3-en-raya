@@ -159,6 +159,9 @@ void loop()
                     tablero.ShowTablero(); // Mostrar el estado del tablero después de la jugada
                     // Convertir coordenadas a formato XYZ
                     MovimientoCoords coords = tablero.MoverFichaDevuelveCoords(PIEZA_X, jugada);
+                    std::string respuesta = tablero.MovimientoCoordsToString(coords); // Convertir a string
+                    client.println(respuesta.c_str()); // Enviar la jugada de la IA al cliente
+                    Serial.println(respuesta.c_str());
                     Serial.println("Turno Jugador O:");
                     break;
                 }

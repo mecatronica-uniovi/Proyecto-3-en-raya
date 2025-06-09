@@ -288,3 +288,40 @@ void Tablero::ActualizarTableroDesdeString(const String &estado, Tablero &tabler
     }
     tablero.ShowTablero();
 }
+
+// Convierte un array de 3 doubles a string "x,y,z"
+std::string Tablero::ArrayToString(const std::array<double, 3>& arr) {
+    return std::to_string(arr[0]) + "," + std::to_string(arr[1]) + "," + std::to_string(arr[2]);
+}
+
+// Convierte string "x,y,z" a array de 3 doubles
+std::array<double, 3> Tablero::StringToArray(const std::string& s) {
+    std::array<double, 3> arr;
+    std::stringstream ss(s);
+    std::string item;
+    int i = 0;
+
+    while (std::getline(ss, item, ',') && i < 3) {
+        arr[i++] = std::stod(item);
+    }
+
+    return arr;
+}
+
+// Convierte MovimientoCoords a string "x1,y1,z1;x2,y2,z2"
+std::string Tablero::MovimientoCoordsToString(const MovimientoCoords& coords) {
+    return ArrayToString(coords.origen_xyz) + ";" + ArrayToString(coords.destino_xyz);
+}
+
+// Convierte string "x1,y1,z1;x2,y2,z2" a MovimientoCoords
+MovimientoCoords Tablero::StringToMovimientoCoords(const std::string& s) {
+    MovimientoCoords coords;
+    std::stringstream ss(s);
+    std::string origen_str, destino_str;
+
+    if (std::getline(ss, origen_str, ';') && std::getline(ss, destino_str, ';')) {
+        coords.origen_xyz = StringToArray(origen_str);
+        coords.destino_xyz = StringToArray(destino_str);
+    }
+    return coords;
+}

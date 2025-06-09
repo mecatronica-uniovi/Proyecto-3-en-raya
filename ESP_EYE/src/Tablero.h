@@ -3,7 +3,8 @@
 #include <Arduino.h>
 #include <array>
 #include <string>
-
+#include <sstream>
+#include <vector>
 // Definiciones constantes
 constexpr int I_ROW_O = 0; // fila inicial de los circulos azules
 constexpr int I_ROW_X = 4; // fila inicial de las cruces rojas
@@ -55,6 +56,10 @@ public:
 
     void AsignarFicha(TipoPieza tipo, Pos destino); // Asigna una ficha a una posición específica en el tablero
     void ActualizarTableroDesdeString(const String &estado, Tablero &tablero); // Actualiza el tablero desde un string recibido
+    std::string ArrayToString(const std::array<double, 3>& arr);
+    std::array<double, 3> StringToArray(const std::string& s);
+    std::string MovimientoCoordsToString(const MovimientoCoords& coords);
+    MovimientoCoords StringToMovimientoCoords(const std::string& mensaje);
 };
 
 #endif // TABLERO_H
