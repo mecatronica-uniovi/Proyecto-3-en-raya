@@ -14,10 +14,13 @@
 // #include <algorithm>
 // #include <FastLED.h>
 
-// const char *ssid = "OPPO Carla";         // Nombre de la red WiFi
-// const char *password = "carlaflobeto";   // Contraseña de la red WiFi
-// const char *serverIP = "192.168.94.203"; // Dirección IP de MATLAB
-// const int serverPort = 5000;             // Puerto donde escuchará MATLAB
+// // const char *ssid = "OPPO Carla";         // Nombre de la red WiFi
+// // const char *password = "carlaflobeto";   // Contraseña de la red WiFi
+// // const char *serverIP = "192.168.94.203"; // Dirección IP de MATLAB
+// const char *ssid = "Livebox6-4EAF";     
+// const char *password = "P92LZTQvFHcF"; 
+// const char *serverIP = "192.168.1.14";
+// const int serverPort = 5000;             // Puerto donde escucha MATLAB
 
 // // Pines de cámara
 // #define PWDN_GPIO_NUM -1

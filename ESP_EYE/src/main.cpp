@@ -1,222 +1,223 @@
-// /*
+// En este fichero se va a integrar el uso del Anillo LED, la recepción de datos desde MATLAB y la captura de
+// imágenes desde la cámara ESP-EYE.
 
-
-
-// CÓDIGO QUE REALIZA UNA CAPTURA DE IMAGEN CUANDO SE RECIBE EL CARÁCTER 'C' POR WIFI Y ENVÍA LA IMAGEN A MATLAB
-
-// INCLUYENDO EL ANILLO LED
-
-// */
-
-// #include <Arduino.h>
-// #include <WiFi.h>
-// #include "esp_camera.h"
-// #include <algorithm>
-// #include <FastLED.h>
-
+#include <Arduino.h>
+#include <WiFi.h>
+#include "Camara.h"
+#include <algorithm>
+#include "AnilloLed.h"
+#include "Tablero.h"
+#include "IA.h"
+#include "CoordenadasUtils.h"
 // const char *ssid = "OPPO Carla";         // Nombre de la red WiFi
 // const char *password = "carlaflobeto";   // Contraseña de la red WiFi
 // const char *serverIP = "192.168.94.203"; // Dirección IP de MATLAB
-// const int serverPort = 5000;             // Puerto donde escuchará MATLAB
+const int serverPort = 5000; // Puerto donde escuchará MATLAB
+const char *ssid = "Livebox6-4EAF";
+const char *password = "P92LZTQvFHcF";
+// Objeto servidor WiFi
+WiFiServer server(serverPort);
+AnilloLed anilloLed(LED_PIN, NUM_LEDS); // Instancia del anillo LED
+// VARIABLES DE JUEGO
+Tablero tablero;           // Instancia del tablero
+TipoPieza turno = PIEZA_O; // Turno actual, empieza el jugador O
+IA ia;                     // Instancia de la IA para el juego
+int winner = -2;
 
-// // Pines de cámara
-// #define PWDN_GPIO_NUM -1
-// #define RESET_GPIO_NUM -1
-// #define XCLK_GPIO_NUM 4
-// #define SIOD_GPIO_NUM 18
-// #define SIOC_GPIO_NUM 23
-// #define Y9_GPIO_NUM 36
-// #define Y8_GPIO_NUM 37
-// #define Y7_GPIO_NUM 38
-// #define Y6_GPIO_NUM 39
-// #define Y5_GPIO_NUM 35
-// #define Y4_GPIO_NUM 14
-// #define Y3_GPIO_NUM 13
-// #define Y2_GPIO_NUM 34
-// #define VSYNC_GPIO_NUM 5
-// #define HREF_GPIO_NUM 27
-// #define PCLK_GPIO_NUM 25
+// Conversión de TipoPieza a Ganador
+Ganador tipoPiezaToGanador(TipoPieza pieza)
+{
+    switch (pieza)
+    {
+    case PIEZA_O:
+        return PLAYER_O;
+    case PIEZA_X:
+        return PLAYER_X;
+    default:
+        return NO_PLAYER;
+    }
+}
 
-// #define LED_GPIO_NUM 22
+// CAMARA
+Camara camara; // Instancia de la cámara
 
-// // PINES ANILLO LED
-// #define LED_PIN 19 // GPIO del ESP-EYE conectado a DIN del anillo
+void setup()
+{
+    Serial.begin(115200);
+    // Configuración de la cámara
+    camara.InitCamara();
+    // Conexión WiFi
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(1000);
+        Serial.print(".");
+    }
+    // Mostrar Dirección IP
+    Serial.print("Dirección IP: ");
+    Serial.println(WiFi.localIP());
+    // Configuración del anillo LED
+    anilloLed.Init(); // Inicializar el anillo LED
+    server.begin();
+    Serial.printf("Servidor iniciado en puerto %d\n", serverPort);
+    tablero.InitTablero(); // Inicializar el tablero
+    Serial.println("Tablero inicializado: ");
+    tablero.ShowTablero(); // Mostrar el estado inicial del tablero
+}
 
-// // PARÁMETROS ANILLO LED
+void loop()
+{
+    WiFiClient client = server.available(); // Verificar si hay un cliente disponible
+    if (!client)
+        return; // Si no hay cliente, salir del loop
+    Serial.println("Cliente conectado!");
+    while (client.connected())
+    {
+        if (client.available())
+        {
+            String mensaje = client.readStringUntil('\n'); // Leer el mensaje del cliente
+            if (mensaje == "TURNO_IA")
+            {
+                turno = PIEZA_O; // Cambiar turno a IA
+                // Realizar una captura para conocer el estado del tablero
+                camara.fb = camara.get_latest_frame(); // Obtener el fotograma más reciente
 
-// #define NUM_LEDS 12    // Número total de LEDs en el anillo
-// #define BRIGHTNESS 255 // Brillo máximo
-// #define LED_TYPE WS2812B
-// #define COLOR_ORDER GRB // La mayoría de WS2812B usan GRB
+                if (!camara.fb)
+                {
+                    Serial.println("Error al capturar la imagen");
+                    client.write("E", 1); // Enviar un error al cliente
+                    continue;
+                }
 
-// // Objeto de anillo LED
-// CRGB leds[NUM_LEDS];
+                // Enviar tamaño de la imagen primero
+                uint32_t imgSize = camara.fb->len;
+                if (client.write((uint8_t *)&imgSize, sizeof(imgSize)) != sizeof(imgSize))
+                {
+                    Serial.println("Error al enviar tamaño de la imagen");
+                    esp_camera_fb_return(camara.fb); // Liberar memoria
+                    break;
+                }
 
-// // Objeto servidor WiFi
-// WiFiServer server(serverPort);
-// // Variable para almacenar el tiempo de la última captura
-// unsigned long lastCapture = 0;
-// const unsigned long MAX_IMAGE_AGE = 1000; // Tiempo máximo en milisegundos para considerar una imagen "reciente"
+                // Enviar la imagen completa a MATLAB para hacer el procesamiento
+                if (client.write(camara.fb->buf, camara.fb->len) != camara.fb->len)
+                {
+                    Serial.println("Error al enviar la imagen");
+                }
+                else
+                {
+                    Serial.println("Imagen enviada correctamente");
+                    camara.lastCapture = millis(); // Actualizar el tiempo de la última captura
+                }
+                esp_camera_fb_return(camara.fb); // Liberar memoria
+                camara.fb = NULL;
+            }
 
-// camera_fb_t *fb = NULL; // Variable para almacenar el fotograma capturado
-// camera_config_t config; // Configuración de la cámara
+            else if (mensaje.startsWith("TABLERO:"))
+            {
+                turno = PIEZA_O;                                       // Cambiar turno a IA
+                String estado = mensaje.substring(8);                  // Eliminar la cabecera "TABLERO:"
+                tablero.ActualizarTableroDesdeString(estado, tablero); // Actualizar el tablero con el estado recibido
 
-// void setup()
-// {
-//     Serial.begin(115200);
-//     // Configuración de la cámara
-//     config.ledc_channel = LEDC_CHANNEL_0;
-//     config.ledc_timer = LEDC_TIMER_0;
-//     config.pin_d0 = Y2_GPIO_NUM;
-//     config.pin_d1 = Y3_GPIO_NUM;
-//     config.pin_d2 = Y4_GPIO_NUM;
-//     config.pin_d3 = Y5_GPIO_NUM;
-//     config.pin_d4 = Y6_GPIO_NUM;
-//     config.pin_d5 = Y7_GPIO_NUM;
-//     config.pin_d6 = Y8_GPIO_NUM;
-//     config.pin_d7 = Y9_GPIO_NUM;
-//     config.pin_xclk = XCLK_GPIO_NUM;
-//     config.pin_pclk = PCLK_GPIO_NUM;
-//     config.pin_vsync = VSYNC_GPIO_NUM;
-//     config.pin_href = HREF_GPIO_NUM;
-//     config.pin_sccb_sda = SIOD_GPIO_NUM;
-//     config.pin_sccb_scl = SIOC_GPIO_NUM;
-//     config.pin_pwdn = PWDN_GPIO_NUM;
-//     config.pin_reset = RESET_GPIO_NUM;
-//     config.xclk_freq_hz = 20000000;
-//     config.frame_size = FRAMESIZE_UXGA;
-//     config.pixel_format = PIXFORMAT_JPEG; // for streaming
-//     // config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
-//     config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
-//     config.fb_location = CAMERA_FB_IN_PSRAM;
-//     config.jpeg_quality = 10; // calidad de la imagen (0-63, menor es mejor)
-//     config.fb_count = 1;      // número de buffers de fotogramas (1-2)
-//     pinMode(13, INPUT_PULLUP);
-//     pinMode(14, INPUT_PULLUP);
-//     esp_err_t err = esp_camera_init(&config);
-//     if (err != ESP_OK)
-//     {
-//         Serial.printf("Error al inicializar la cámara (0x%x)", err);
-//         return;
-//     }
-//     // Conexión WiFi
-//     WiFi.begin(ssid, password);
-//     while (WiFi.status() != WL_CONNECTED)
-//     {
-//         delay(1000);
-//         Serial.print(".");
-//     }
-//     Serial.println("\nConectado a WiFi");
-//     // Mostrar Dirección IP
-//     Serial.print("Dirección IP: ");
-//     Serial.println(WiFi.localIP());
-//     // Crear servidor
-//     // Configuración del anillo LED
-//     FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-//     FastLED.setBrightness(BRIGHTNESS);
-//     // Encender todos los LEDs en blanco
-//     for (int i = 0; i < NUM_LEDS; i++)
-//     {
-//         leds[i] = CRGB::Moccasin;
-//     }
-//     FastLED.show(); // Mostrar los LEDs encendidos
-//     server.begin();
-//     Serial.printf("Servidor iniciado en puerto %d\n", serverPort);
-// }
+                // Una vez actualizado el tablero, la IA juega
+                // Comprobar si alguien ha ganado
+                winner = tablero.checkwinner();
+                switch (winner)
+                {
+                case PLAYER_O:
+                {
+                    Serial.println("Jugador O ha ganado!");
+                    client.println("O_WIN"); // Gana la IA
+                    // Encender LEDs en rojo
+                    anilloLed.SetColor(CRGB::Red); // Encender LEDs en rojo
+                    break;
+                }
+                case PLAYER_X:
+                {
+                    Serial.println("Jugador X ha ganado!");
+                    client.println("X_WIN"); // Gana el jugador
+                    // Encender LEDs en verde
 
-// // Función para obtener siempre la imagen más reciente
-// camera_fb_t *get_latest_frame()
-// {
-//     camera_fb_t *fb = NULL;
+                    break;
+                }
+                case NO_PLAYER:
+                {
+                    winner = tablero.checkempate(); // Comprobar si hay empate
+                    if (winner == -1)
+                    {
+                        Serial.println("Empate!");
+                        client.println("EMPATE"); // Enviar mensaje de empate al cliente
+                        // Encender LEDs en azul
+                        anilloLed.SetColor(CRGB::Blue); // Encender LEDs en azul
+                        return;                         // Salir del loop si hay empate
+                    }
+                    Serial.println("Nadie ha ganado aún");
+                    // En primer lugar, comprobar si se puede ganar
+                    tablero._checkwinnable();
+                    Pos jugada = ia.ia(tipoPiezaToGanador(turno), tablero); // IA juega con PIEZA_X
+                    tablero.MoverFicha(PIEZA_X, jugada);                    // Mover la ficha que le toca al robot
+                    Serial.println("IA ha jugado:");
+                    tablero.ShowTablero(); // Mostrar el estado del tablero después de la jugada
+                    // Convertir coordenadas a formato XYZ
+                    MovimientoCoords coords = tablero.MoverFichaDevuelveCoords(PIEZA_X, jugada);
+                    Serial.println("Turno Jugador O:");
+                    break;
+                }
+                }
+                turno = PIEZA_X; // Cambiar turno al jugador X
+            }
 
-//     // Si tenemos fb_count > 1, necesitamos vaciar la cola
-//     for (int i = 0; i < config.fb_count - 1; i++)
-//     {
-//         fb = esp_camera_fb_get();
-//         if (fb)
-//         {
-//             // Si no es el último frame, lo liberamos
-//             esp_camera_fb_return(fb);
-//             fb = NULL;
-//         }
-//     }
+            else if (mensaje.startsWith("RESET"))
+            {
+                tablero.InitTablero(); // Reiniciar el tablero
+                tablero.ShowTablero(); // Mostrar el estado del tablero después del reinicio
+                Serial.println("Tablero reiniciado");
+                String respuesta = "RESET_OK";
+                client.println(respuesta); // Enviar respuesta al cliente
+            }
+        }
 
-//     // Obtenemos el último frame
-//     fb = esp_camera_fb_get();
-
-//     // Verificamos la "edad" de la imagen usando el timestamp
-//     if (fb)
-//     {
-//         // Comprobamos si la imagen es reciente usando el timestamp
-//         unsigned long currentTime = millis();
-//         unsigned long imageTime = fb->timestamp.tv_sec * 1000 + fb->timestamp.tv_usec / 1000;
-//         unsigned long imageAge = currentTime - imageTime;
-
-//         Serial.printf("Edad de la imagen: %lu ms\n", imageAge);
-
-//         // Si la imagen es demasiado antigua, capturamos una nueva
-//         if (imageAge > MAX_IMAGE_AGE)
-//         {
-//             Serial.println("Imagen demasiado antigua, capturando una nueva");
-//             esp_camera_fb_return(fb);
-
-//             // Esperamos un poco para que la cámara se actualice
-//             delay(100);
-
-//             // Intentamos de nuevo
-//             return get_latest_frame();
-//         }
-//     }
-
-//     return fb;
-// }
-
-// void loop()
-// {
-//     WiFiClient client = server.available(); // Verificar si hay un cliente disponible
-//     if (!client)
-//         return; // Si no hay cliente, salir del loop
-//     Serial.println("Cliente conectado!");
-//     while (client.connected())
-//     {
-//         if (client.available())
-//         {
-//             char request = client.read(); // Leer la petición del cliente
-//             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//             if (request == 'C') //Aquí sólo habría que cambiar el mensaje 'C' por el que envíe interfaz !!!!!!!!!!!
-//             {                                         // Si la petición es 'C', capturar imagen
-//                 camera_fb_t *fb = get_latest_frame(); // Obtener el fotograma más reciente
-
-//                 if (!fb)
-//                 {
-//                     Serial.println("Error al capturar la imagen");
-//                     client.write("E", 1); // Enviar un error al cliente
-//                     continue;
-//                 }
-
-//                 // Enviar tamaño de la imagen primero
-//                 uint32_t imgSize = fb->len;
-//                 if (client.write((uint8_t *)&imgSize, sizeof(imgSize)) != sizeof(imgSize))
-//                 {
-//                     Serial.println("Error al enviar tamaño de la imagen");
-//                     esp_camera_fb_return(fb); // Liberar memoria
-//                     break;
-//                 }
-
-//                 // Enviar la imagen completa
-//                 if (client.write(fb->buf, fb->len) != fb->len)
-//                 {
-//                     Serial.println("Error al enviar la imagen");
-//                 }
-//                 else
-//                 {
-//                     Serial.println("Imagen enviada correctamente");
-//                     lastCapture = millis(); // Actualizar el tiempo de la última captura
-//                 }
-
-//                 esp_camera_fb_return(fb); // Liberar memoria
-//                 fb = NULL;
-//             }
-//         }
-//     }
-// }
+        winner = tablero.checkwinner(); // Comprobar si alguien ha ganado
+        if (winner != -2)
+        {
+            // Si hay un ganador, encender LEDs en rojo o verde según el ganador
+            if (winner == PLAYER_O)
+            {   
+                client.println("O_WIN"); // Gana la IA
+                Serial.println("Jugador O ha ganado!");
+                anilloLed.SetColor(CRGB::Red); // Encender LEDs en rojo
+                winner = -2;                   // Reiniciar el ganador para permitir un nuevo juego
+                tablero.InitTablero();         // Reiniciar el tablero
+                tablero.ShowTablero();         // Mostrar el estado del tablero después del reinicio
+                delay(1000);
+                anilloLed.SetColor(CRGB::Moccasin); // Apagar los LEDs
+            }
+            else if (winner == PLAYER_X)
+            {
+                client.println("X_WIN"); // Gana la IA
+                Serial.println("Jugador X ha ganado!");
+                anilloLed.SetColor(CRGB::Green); // Encender LEDs en verde
+                winner = -2;                     // Reiniciar el ganador para permitir un nuevo juego
+                tablero.InitTablero();           // Reiniciar el tablero
+                tablero.ShowTablero();           // Mostrar el estado del tablero después del reinicio
+                delay(1000);
+                anilloLed.SetColor(CRGB::Moccasin); // Apagar los LEDs
+            }
+            else if (winner == NO_PLAYER)
+            {
+                winner = tablero.checkempate(); // Comprobar si hay empate
+                if (winner == -1)
+                {
+                    client.println("EMPATE"); // Enviar mensaje de empate al cliente
+                    Serial.println("Empate!");
+                    anilloLed.SetColor(CRGB::Blue); // Encender LEDs en azul
+                    winner = -2;                    // Reiniciar el ganador para permitir un nuevo juego
+                    tablero.InitTablero();          // Reiniciar el tablero
+                    tablero.ShowTablero();          // Mostrar el estado del tablero después del reinicio
+                    delay(1000);
+                    anilloLed.SetColor(CRGB::Moccasin); // Apagar los LEDs
+                }
+            }
+            FastLED.show(); // Mostrar los LEDs encendidos
+        }
+    }
+}

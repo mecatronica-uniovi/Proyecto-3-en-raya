@@ -8,16 +8,16 @@
 constexpr int I_ROW_O = 0; // fila inicial de los circulos azules
 constexpr int I_ROW_X = 4; // fila inicial de las cruces rojas
 
-// Enumeraciones (sin cambios)
+// Enumeraciones
 enum TipoPieza { PIEZA_O, PIEZA_X, NO_PIEZA, CASILLA_NO_VALIDA };
 enum Ganador { PLAYER_O, PLAYER_X, NO_PLAYER, BOTH_PLAYERS };
 
-// Estructura Pos (sin cambios)
+// Estructura Pos
 struct Pos {
     int row, col;
 };
 
-// Estructura MovimientoCoords (sin cambios)
+// Estructura MovimientoCoords
 struct MovimientoCoords {
     std::array<double, 3> origen_xyz;
     std::array<double, 3> destino_xyz;
@@ -25,7 +25,7 @@ struct MovimientoCoords {
 
 class Tablero {
 public:
-    // Estado del tablero (idéntico a tu struct original)
+    // Estado del tablero
     struct Estado {
         TipoPieza datos[5][5];
         Ganador columnas[3];
@@ -36,7 +36,7 @@ public:
     // Constructor e inicialización
     Tablero();
     
-    // Métodos públicos (equivalente a tus funciones originales)
+    // Métodos
     void InitTablero();
     void ShowTablero() const;
     std::string TableroAString() const;
@@ -51,7 +51,7 @@ public:
     // Acceso al estado
     const Estado& estado() const { return _estado; }
     
-    Estado _estado;  // Reemplaza la variable global _tablero
+    Estado _estado; // Estado del tablero
 
     void AsignarFicha(TipoPieza tipo, Pos destino); // Asigna una ficha a una posición específica en el tablero
     void ActualizarTableroDesdeString(const String &estado, Tablero &tablero); // Actualiza el tablero desde un string recibido

@@ -125,10 +125,6 @@ void Tablero::MoverFicha(TipoPieza tipo, Pos destino) {
     }
 }
 
-void Tablero::AsignarFicha(TipoPieza tipo, Pos destino) {
-    _estado.datos[destino.row][destino.col] = tipo;
-}
-
 int Tablero::checkwinner() const {
     int i, n;
 
@@ -186,7 +182,7 @@ int Tablero::checkempate() const {
             }
         }
     }
-    return 1; // Tablero lleno, es un empate
+    return -1; // Tablero lleno, es un empate
 }
 
 void Tablero::_checkwinnable() {
@@ -260,8 +256,13 @@ MovimientoCoords Tablero::MoverFichaDevuelveCoords(TipoPieza tipo, Pos destino)
     return coords; // Devolver las coordenadas de destino
 }
 
+void Tablero::AsignarFicha(TipoPieza tipo, Pos destino) {
+    _estado.datos[destino.row][destino.col] = tipo;
+}
+
 void Tablero::ActualizarTableroDesdeString(const String &estado, Tablero &tablero)
 {
+    tablero.InitTablero(); // Reiniciar el tablero antes de actualizar
     int index = 0;
     for (int fila = 0; fila < 5; fila++)
     {
