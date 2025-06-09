@@ -259,3 +259,31 @@ MovimientoCoords Tablero::MoverFichaDevuelveCoords(TipoPieza tipo, Pos destino)
     coords.destino_xyz = CoordenadasUtils::ConvertirCoordenadas(destino);
     return coords; // Devolver las coordenadas de destino
 }
+
+void Tablero::ActualizarTableroDesdeString(const String &estado, Tablero &tablero)
+{
+    int index = 0;
+    for (int fila = 0; fila < 5; fila++)
+    {
+        for (int col = 0; col < 5; col++)
+        {
+            char valor = estado[index++];
+
+            Pos pos = {fila, col};
+
+            switch (valor)
+            {
+            case 'X':
+                tablero.AsignarFicha(PIEZA_X, pos);
+                break;
+            case 'O':
+                tablero.AsignarFicha(PIEZA_O, pos);
+                break;
+            case ' ':
+                tablero.AsignarFicha(NO_PIEZA, pos);
+                break;
+            }
+        }
+    }
+    tablero.ShowTablero();
+}

@@ -13,39 +13,39 @@ WiFiServer server(serverPort);
 
 Tablero tablero; // Instancia del tablero
 
-void ActualizarTableroDesdeString(const String &estado)
-{
-    int index = 0;
-    for (int fila = 0; fila < 5; fila++)
-    {
-        for (int col = 0; col < 5; col++)
-        {
-            // Saltar saltos de línea
-            Serial.printf("Procesando fila %d, columna %d, índice %d\n", fila, col, index);
-            char valor = estado[index++];
+// void ActualizarTableroDesdeString(const String &estado)
+// {
+//     int index = 0;
+//     for (int fila = 0; fila < 5; fila++)
+//     {
+//         for (int col = 0; col < 5; col++)
+//         {
+//             // Saltar saltos de línea
+//             Serial.printf("Procesando fila %d, columna %d, índice %d\n", fila, col, index);
+//             char valor = estado[index++];
 
-            Pos pos = {fila, col};
+//             Pos pos = {fila, col};
 
-            switch (valor)
-            {
-            case 'X':
-                tablero.AsignarFicha(PIEZA_X, pos);
-                Serial.printf("Ficha X movida a (%d, %d)\n", fila, col);
-                break;
-            case 'O':
-                tablero.AsignarFicha(PIEZA_O, pos);
-                Serial.printf("Ficha O movida a (%d, %d)\n", fila, col);
-                break;
-            case ' ':
-                tablero.AsignarFicha(NO_PIEZA, pos);
-                Serial.printf("Casilla vacía en (%d, %d)\n", fila, col);
-                break;
-            }
-        }
-    }
-    // printf("Estado del tablero:\n%s\n", tablero.TableroAString());
-    tablero.ShowTablero(); // Mostrar el estado del tablero después de la actualización
-}
+//             switch (valor)
+//             {
+//             case 'X':
+//                 tablero.AsignarFicha(PIEZA_X, pos);
+//                 Serial.printf("Ficha X movida a (%d, %d)\n", fila, col);
+//                 break;
+//             case 'O':
+//                 tablero.AsignarFicha(PIEZA_O, pos);
+//                 Serial.printf("Ficha O movida a (%d, %d)\n", fila, col);
+//                 break;
+//             case ' ':
+//                 tablero.AsignarFicha(NO_PIEZA, pos);
+//                 Serial.printf("Casilla vacía en (%d, %d)\n", fila, col);
+//                 break;
+//             }
+//         }
+//     }
+//     // printf("Estado del tablero:\n%s\n", tablero.TableroAString());
+//     tablero.ShowTablero(); // Mostrar el estado del tablero después de la actualización
+// }
 
 void setup()
 {
@@ -83,20 +83,9 @@ void loop()
             if (client.available())
             {
                 String estadoTablero = client.readString(); // Se espera una matriz tipo string de 5x5
-                Serial.println("Estado recibido: " + estadoTablero);
-                for (size_t i = 0; i < estadoTablero.length(); i++)
-                {
-                    char c = estadoTablero[i];
-                    if (c == '\n')
-                        Serial.print("\\n");
-                    else if (c == '\r')
-                        Serial.print("\\r");
-                    else
-                        Serial.print(c);
-                }
                 Serial.println();                            // Imprimir el estado del tablero recibido
-                ActualizarTableroDesdeString(estadoTablero); // Actualizar el tablero con el estado recibido
-
+                //ActualizarTableroDesdeString(estadoTablero); // Actualizar el tablero con el estado recibido
+                tablero.ActualizarTableroDesdeString(estadoTablero, tablero); // Actualizar el tablero con el estado recibido
                 // Pos jugada = IA::ia(PLAYER_X, tablero);
 
                 // tablero.MoverFicha(PIEZA_X, jugada); // Mover la ficha que le toca al robot

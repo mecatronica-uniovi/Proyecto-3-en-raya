@@ -54,6 +54,7 @@ public:
     Estado _estado;  // Reemplaza la variable global _tablero
 
     void AsignarFicha(TipoPieza tipo, Pos destino); // Asigna una ficha a una posición específica en el tablero
+    void ActualizarTableroDesdeString(const String &estado, Tablero &tablero); // Actualiza el tablero desde un string recibido
 };
 
 #endif // TABLERO_H
