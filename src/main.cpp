@@ -37,6 +37,7 @@ void IRAM_ATTR onFallingFC()
         // }
         
         _base->detener();
+        //_base->kick_inicial_mejorado();
         _hombro->detener();
         _codo->detener();
 
@@ -119,9 +120,9 @@ void loop()
                 break;
 
             case 'H':
-            case 'h':
+            case 'h':   
                 Serial.printf("Moviendo hombro a %.2f grados\n", grados);
-                _hombro->ControlPID_Motor(grados, Kp_hombro, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                 _hombro->ControlPID_Motor(grados, Kp_hombro, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
                 break;
 
             case 'C':
@@ -156,14 +157,9 @@ void loop()
 //     Serial.print(">Codo:");
 //     Serial.println(deg_codo);
 
-//    // _base->moverAGrados(30);
+//    _hombro->moverPWM(80);
 
 //     delay(100);
-// }
-
-// void setup() {
-//     Serial.begin(115200);
-//     // Aquí puedes inicializar tus motores, sensores, etc.
 // }
 
 // void loop() {
