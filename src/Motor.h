@@ -29,7 +29,7 @@ public:
     bool resetEncoder();
 
 
-    bool kick_inicial_mejorado(float error_inicial, int csEncoder);
+    bool kick_inicial_mejorado(float objetivo, int pwm_mant);
 
     // Encoder
     Encoder *_encoder = nullptr;

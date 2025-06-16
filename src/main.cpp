@@ -2,7 +2,6 @@
 
 #include "configuracion.h"
 
-
 // Posición de los pines de los encoders
 #define CS_BASE 10
 #define CS_HOMBRO 41
@@ -35,7 +34,7 @@ void IRAM_ATTR onFallingFC()
         //     // _hombro->ControlPID_Motor(_hombro->leerGrados()+5);
         //     // _codo->ControlPID_Motor(_codo->leerGrados()+5);
         // }
-        
+
         _base->detener();
         //_base->kick_inicial_mejorado();
         _hombro->detener();
@@ -74,33 +73,38 @@ void setup()
     _base->setRegulador(Kp_base, Ki_base, Kd_base, Ts);
 
     _hombro = new Motor(IN1_M2, IN2_M2, EN_M2, CS_HOMBRO);
-    _hombro->setRegulador(0.1, 0.01, 0.01, Ts);
+    _hombro->setRegulador(Kp_hombro, Ki_hombro,Kd_hombro, Ts);
 
     _codo = new Motor(IN1_M3, IN2_M3, EN_M3, CS_CODO);
-    _codo->setRegulador(0.1, 0.01, 0.01, Ts);
+    _codo->setRegulador(Kp_codo, Ki_codo, Kd_codo, Ts);
 }
 
 String comando = "";
 
 void loop()
 {
+
     if (Serial.available())
     {
         String comando = Serial.readStringUntil('\n');
-        comando.trim();  // Elimina espacios y \r
+        comando.trim(); // Elimina espacios y \r
 
-        if (comando.length() == 0) return;
+        if (comando.length() == 0)
+            return;
 
         // Comandos de reseteo
-        if (comando.equalsIgnoreCase("reset_base")) {
+        if (comando.equalsIgnoreCase("reset_base"))
+        {
             Serial.println("Reseteando encoder de base...");
             _base->resetEncoder();
         }
-        else if (comando.equalsIgnoreCase("reset_hombro")) {
+        else if (comando.equalsIgnoreCase("reset_hombro"))
+        {
             Serial.println("Reseteando encoder de hombro...");
             _hombro->resetEncoder();
         }
-        else if (comando.equalsIgnoreCase("reset_codo")) {
+        else if (comando.equalsIgnoreCase("reset_codo"))
+        {
             Serial.println("Reseteando encoder de codo...");
             _codo->resetEncoder();
         }
@@ -120,15 +124,31 @@ void loop()
                 break;
 
             case 'H':
-            case 'h':   
+            case 'h':
                 Serial.printf("Moviendo hombro a %.2f grados\n", grados);
-                 _hombro->ControlPID_Motor(grados, Kp_hombro, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                // Evitar que se produzca el kick inicial cuando se va de una posición alta a una baja, tal que -20 -> 20
+                if(abs(grados) > abs(_hombro->leerGrados()))
+                {_hombro->kick_inicial_mejorado(grados, PWM_MANT_HOMBRO);
+                _hombro->ControlPID_Motor(grados, Kp_hombro, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                }
+                else
+                {
+                    _hombro->ControlPID_Motor(grados, Kp_hombro, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                }
+                
                 break;
 
             case 'C':
             case 'c':
                 Serial.printf("Moviendo codo a %.2f grados\n", grados);
+                if(abs(grados) > abs(_codo->leerGrados()))
+                {_codo->kick_inicial_mejorado(grados, PWM_MANT_CODO); // Revisar kick inicial del codo, no funciona bien
                 _codo->ControlPID_Motor(grados, Kp_codo, Ki_codo, Kd_codo, PWM_MANT_CODO);
+                }
+                else
+                {
+                    _codo->ControlPID_Motor(grados, Kp_codo, Ki_codo, Kd_codo, PWM_MANT_CODO);
+                }
                 break;
 
             default:
@@ -136,7 +156,8 @@ void loop()
                 break;
             }
         }
-        else {
+        else
+        {
             Serial.println("Formato de comando no válido.");
         }
     }

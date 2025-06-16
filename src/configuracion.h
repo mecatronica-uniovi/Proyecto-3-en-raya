@@ -15,17 +15,17 @@ const int pinza_cerrada=120;
 const float Ts = 0.01;
 
 // Ganancias PID base
-#define Kp_base 15
+#define Kp_base 15 //Ganancias de la base no hace falta tocarlas
 #define Ki_base 2
 #define Kd_base 1
 
 // Ganancias PID hombro
-#define Kp_hombro 0.1
-#define Ki_hombro 0.01
+#define Kp_hombro 2 // Ganancias del hombro revisar
+#define Ki_hombro 0.08
 #define Kd_hombro 0.1
 
 // Ganancias PID codo
-#define Kp_codo 0.1
+#define Kp_codo 1 // Ganancias del codo revisar
 #define Ki_codo 0.01
 #define Kd_codo 0.1
 
@@ -39,8 +39,8 @@ const int fc6 = 21;
 
 // PWM motores
 const int PWM_MANT_BASE=0;
-const int PWM_MANT_HOMBRO=80;
-const int PWM_MANT_CODO=80;
+const int PWM_MANT_HOMBRO=90;
+const int PWM_MANT_CODO=90;
 
 // Motor 1
 #define IN1_M1 16
@@ -59,8 +59,8 @@ const int PWM_MANT_CODO=80;
 
 // Pines encoder
 #define CS1 10
-#define CS2 40
-#define CS3 41
+#define CS2 41
+#define CS3 38
 
 // const array<double, 4> L_eslab={0,125,125,90};
 const array<double, 4> L_eslab={200,210,300,50};
