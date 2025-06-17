@@ -14,7 +14,7 @@ public:
     float leerGrados();
 
     // Movimiento básico
-    void mover();
+    void moverAGrados(double gradosRelativos);
     void moverPWM(float PWM);
     void detener();
     void ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pwm_mant);

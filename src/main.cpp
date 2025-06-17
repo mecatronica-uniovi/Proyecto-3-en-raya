@@ -11,36 +11,25 @@ Motor *_base, *_hombro, *_codo;
 
 void IRAM_ATTR onFallingFC()
 {
-    delayMicroseconds(500);
     // Verificar si los finales de carrera están activados
     if (digitalRead(fc1) == LOW || digitalRead(fc2) == LOW || digitalRead(fc3) == LOW || digitalRead(fc4) == LOW)
     {
         // Manejo de interrupciones de finales de carrera
         _base->setFCTriggered(true);
         _hombro->setFCTriggered(true);
-        _codo->setFCTriggered(true);
 
-        Serial.println("Final de carrera activado");
+        float impulso=0;
 
-        // if(digitalRead(fc1) == LOW || digitalRead(fc3) == LOW ){
-        //     // Si se activa el final de carrera 1 o 3, mover motores a la posición inicial
-        //     _base->ControlPID_Motor(_base->leerGrados()-5);
-        //     //  _hombro->ControlPID_Motor(_base->leerGrados()-5);
-        //     //  _codo->ControlPID_Motor(_codo->leerGrados()-5);
-        // }
-        // else if(digitalRead(fc2) == LOW || digitalRead(fc4) == LOW){
-        //     // Si se activa el final de carrera 2 o 4, mover motores a la posición inicial
-        //     _base->ControlPID_Motor(_base->leerGrados()+5);
-        //     // _hombro->ControlPID_Motor(_hombro->leerGrados()+5);
-        //     // _codo->ControlPID_Motor(_codo->leerGrados()+5);
-        // }
+        if(digitalRead(fc1) == LOW || digitalRead(fc3) == LOW){
+            impulso=5;
+        }
+        if(digitalRead(fc2) == LOW || digitalRead(fc4) == LOW){
+            impulso=-5;
+        }
 
-        _base->detener();
-        //_base->kick_inicial_mejorado();
-        _hombro->detener();
-        _codo->detener();
+        // _base->moverAGrados(impulso);
+        // _hombro->moverAGrados(impulso);
 
-        Serial.println("Motores alejados y parados");
     }
     else
     {
@@ -73,7 +62,7 @@ void setup()
     _base->setRegulador(Kp_base, Ki_base, Kd_base, Ts);
 
     _hombro = new Motor(IN1_M2, IN2_M2, EN_M2, CS_HOMBRO);
-    _hombro->setRegulador(Kp_hombro, Ki_hombro,Kd_hombro, Ts);
+    _hombro->setRegulador(Kp_hombro_subir, Ki_hombro,Kd_hombro, Ts); // Hace falta?
 
     _codo = new Motor(IN1_M3, IN2_M3, EN_M3, CS_CODO);
     _codo->setRegulador(Kp_codo, Ki_codo, Kd_codo, Ts);
@@ -129,11 +118,11 @@ void loop()
                 // Evitar que se produzca el kick inicial cuando se va de una posición alta a una baja, tal que -20 -> 20
                 if(abs(grados) > abs(_hombro->leerGrados()))
                 {_hombro->kick_inicial_mejorado(grados, PWM_MANT_HOMBRO);
-                _hombro->ControlPID_Motor(grados, Kp_hombro, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                _hombro->ControlPID_Motor(grados, Kp_hombro_subir, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
                 }
                 else
                 {
-                    _hombro->ControlPID_Motor(grados, Kp_hombro, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                    _hombro->ControlPID_Motor(grados, Kp_hombro_bajar, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
                 }
                 
                 break;
@@ -141,13 +130,13 @@ void loop()
             case 'C':
             case 'c':
                 Serial.printf("Moviendo codo a %.2f grados\n", grados);
-                if(abs(grados) > abs(_codo->leerGrados()))
+                if(grados > (_codo->leerGrados()))
                 {_codo->kick_inicial_mejorado(grados, PWM_MANT_CODO); // Revisar kick inicial del codo, no funciona bien
                 _codo->ControlPID_Motor(grados, Kp_codo, Ki_codo, Kd_codo, PWM_MANT_CODO);
                 }
                 else
-                {
-                    _codo->ControlPID_Motor(grados, Kp_codo, Ki_codo, Kd_codo, PWM_MANT_CODO);
+                {   
+                    _codo->ControlPID_Motor(grados, Kp_codo_bajar, Ki_codo, Kd_codo, PWM_MANT_CODO);
                 }
                 break;
 

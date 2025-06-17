@@ -20,14 +20,16 @@ const float Ts = 0.01;
 #define Kd_base 1
 
 // Ganancias PID hombro
-#define Kp_hombro 2 // Ganancias del hombro revisar
+#define Kp_hombro_subir 15 // Ganancias del hombro subir
+#define Kp_hombro_bajar 10 // Ganancias del hombro revisar
 #define Ki_hombro 0.08
 #define Kd_hombro 0.1
 
 // Ganancias PID codo
-#define Kp_codo 1 // Ganancias del codo revisar
-#define Ki_codo 0.01
-#define Kd_codo 0.1
+#define Kp_codo 30
+#define Kp_codo_bajar 17
+#define Ki_codo 0.05
+#define Kd_codo 0.5
 
 // Pines de la PCB para finales de carrera
 const int fc1 = 9;
