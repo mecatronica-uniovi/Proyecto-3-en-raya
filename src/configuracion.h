@@ -65,6 +65,7 @@ const int PWM_MANT_CODO=90;
 #define CS3 38
 
 // const array<double, 4> L_eslab={0,125,125,90};
-const array<double, 4> L_eslab={200,210,300,50};
+// const array<double, 4> L_eslab={200,210,300,50}; 
+const array<double, 4> L_eslab={55,250,220,145}; // Longitudes de los eslabones del robot
 
 #endif
