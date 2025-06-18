@@ -20,16 +20,20 @@ const float Ts = 0.01;
 #define Kd_base 1
 
 // Ganancias PID hombro
-#define Kp_hombro_subir 15 // Ganancias del hombro subir
-#define Kp_hombro_bajar 10 // Ganancias del hombro revisar
-#define Ki_hombro 0.08
-#define Kd_hombro 0.1
+#define Kp_hombro_subir 12 // Ganancias del hombro subir
+#define Ki_hombro_subir 0
+#define Kd_hombro_subir 1.2
+
+#define Kp_hombro_bajar 0.5 // Ganancias del hombro revisar
+#define Ki_hombro_bajar 0
+#define Kd_hombro_bajar 0
 
 // Ganancias PID codo
-#define Kp_codo 30
-#define Kp_codo_bajar 17
-#define Ki_codo 0.05
-#define Kd_codo 0.5
+#define Kp_codo_subir 50
+#define Kp_codo_bajar 35
+#define Ki_codo 0
+#define Kd_codo_subir 0.1
+#define Kd_codo_bajar 0
 
 // Pines de la PCB para finales de carrera
 const int fc1 = 9;
@@ -41,7 +45,7 @@ const int fc6 = 21;
 
 // PWM motores
 const int PWM_MANT_BASE=0;
-const int PWM_MANT_HOMBRO=90;
+const int PWM_MANT_HOMBRO=120;
 const int PWM_MANT_CODO=90;
 
 // Motor 1

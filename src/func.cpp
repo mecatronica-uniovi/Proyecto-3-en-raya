@@ -110,5 +110,6 @@ void recibir_mensaje(void *parameter)
             }
             vTaskDelay(pdMS_TO_TICKS(50));
         }
+        vTaskDelay(1);
     }
 }

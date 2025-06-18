@@ -42,10 +42,12 @@ void setup()
 {
     Serial.begin(115200);
     // Configuración Servidor WiFi
-    mutex_setup(); // Inicializar el mutex para proteger las medidas
-    delay(1000);
-    xTaskCreate(mantener_wifi, "Mantiene la conexión WiFi activa", 20000, NULL, 5, NULL); // Crear el hilo para mantener la conexión WiFi activa
-    xTaskCreate(recibir_mensaje, "Recibe e imprime por pantalla los datos enviados por el cliente", 20000, NULL, 5, NULL); // Crear el hilo para recibir mensajes
+    // mutex_setup(); // Inicializar el mutex para proteger las medidas
+    // delay(1000);
+    // xTaskCreate(mantener_wifi, "Mantiene la conexión WiFi activa", 20000, NULL, 5, NULL); // Crear el hilo para mantener la conexión WiFi activa
+    // printf("Tarea 1 lanzada\n");
+    // xTaskCreate(recibir_mensaje, "Recibe e imprime por pantalla los datos enviados por el cliente", 20000, NULL, 5, NULL); // Crear el hilo para recibir mensajes
+    // printf("Tarea 2 lanzada\n");
     
     // Inicialización bus SPI para los encoders
     SPI.begin();
@@ -65,13 +67,13 @@ void setup()
 
     // Crear los motores
     _base = new Motor(IN1_M1, IN2_M1, EN_M1, CS_BASE);
-    _base->setRegulador(Kp_base, Ki_base, Kd_base, Ts);
+    //_base->setRegulador(Kp_base, Ki_base, Kd_base, Ts);
 
     _hombro = new Motor(IN1_M2, IN2_M2, EN_M2, CS_HOMBRO);
-    _hombro->setRegulador(Kp_hombro_subir, Ki_hombro,Kd_hombro, Ts); // Hace falta?
+    //_hombro->setRegulador(Kp_hombro_subir, Ki_hombro,Kd_hombro, Ts); // Hace falta?
 
     _codo = new Motor(IN1_M3, IN2_M3, EN_M3, CS_CODO);
-    _codo->setRegulador(Kp_codo, Ki_codo, Kd_codo, Ts);
+    //_codo->setRegulador(Kp_codo, Ki_codo, Kd_codo, Ts);
 
     // // Reiniciar encoders
     _base->resetEncoder();
@@ -127,13 +129,13 @@ void loop()
             case 'h':
                 Serial.printf("Moviendo hombro a %.2f grados\n", grados);
                 // Evitar que se produzca el kick inicial cuando se va de una posición alta a una baja, tal que -20 -> 20
-                if(abs(grados) > abs(_hombro->leerGrados()))
+                if(grados < (_hombro->leerGrados()))
                 {_hombro->kick_inicial_mejorado(grados, PWM_MANT_HOMBRO);
-                _hombro->ControlPID_Motor(grados, Kp_hombro_subir, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                _hombro->ControlPID_Motor(grados, Kp_hombro_subir, Ki_hombro_subir, Kd_hombro_subir, PWM_MANT_HOMBRO);
                 }
                 else
                 {
-                    _hombro->ControlPID_Motor(grados, Kp_hombro_bajar, Ki_hombro, Kd_hombro, PWM_MANT_HOMBRO);
+                    _hombro->ControlPID_Motor(grados, Kp_hombro_bajar, Ki_hombro_bajar, Kd_hombro_bajar, PWM_MANT_HOMBRO);
                 }
                 
                 break;
@@ -143,23 +145,38 @@ void loop()
                 Serial.printf("Moviendo codo a %.2f grados\n", grados);
                 if(grados > (_codo->leerGrados()))
                 {_codo->kick_inicial_mejorado(grados, PWM_MANT_CODO); // Revisar kick inicial del codo, no funciona bien
-                _codo->ControlPID_Motor(grados, Kp_codo, Ki_codo, Kd_codo, PWM_MANT_CODO);
+                _codo->ControlPID_Motor(grados, Kp_codo_subir, Ki_codo, Kd_codo_subir, PWM_MANT_CODO);
                 }
                 else
                 {   
-                    _codo->ControlPID_Motor(grados, Kp_codo_bajar, Ki_codo, Kd_codo, PWM_MANT_CODO);
+                    _codo->ControlPID_Motor(grados, Kp_codo_bajar, Ki_codo, Kd_codo_bajar, PWM_MANT_CODO);
                 }
                 break;
 
             default:
-                Serial.println("Comando no reconocido.");
+                printf("Comando no reconocido %s\n",comando.c_str());
                 break;
             }
         }
         else
         {
-            Serial.println("Formato de comando no válido.");
+            printf("Formato de comando no válido: %s\n",comando.c_str());
         }
+
+    delay(3000);
+
+    float deg_base = _base->leerGrados();
+    float deg_hombro = _hombro->leerGrados();
+    float deg_codo = _codo->leerGrados();
+
+    Serial.print(">Base:");
+    Serial.println(deg_base);
+
+    Serial.print(">Hombro:");
+    Serial.println(deg_hombro);
+
+    Serial.print(">Codo:");
+    Serial.println(deg_codo);
     }
 }
 
@@ -218,7 +235,7 @@ void loop()
 //     Serial.print(">Codo:");
 //     Serial.println(deg_codo);
 
-//    _hombro->moverPWM(80);
+//   // _hombro->moverPWM(80);
 
-//     delay(100);
+//     delay(2000);
 // }

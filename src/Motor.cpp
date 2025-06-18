@@ -4,10 +4,11 @@
 #include <iostream>
 #include "configuracion.h"
 
-Motor::Motor(int in1, int in2, int enable, int cs_encoder) {
+Motor::Motor(int in1, int in2, int enable, int cs_encoder)
+{
     // Inicializar el regulador PID
     _regulador = nullptr;
-    
+
     // Inicializar el motor con los pines de control
     _in1 = in1;
     _in2 = in2;
@@ -26,54 +27,81 @@ float Motor::leerGrados()
     return _encoder->leerGrados();
 }
 
-void Motor::setRegulador(float Kp, float Ki, float Kd, float Tm) {
+void Motor::setRegulador(float Kp, float Ki, float Kd, float Tm)
+{
     _regulador = new RegPID(Kp, Ki, Kd, Tm);
 }
 
 // Resetear el encoder a cero
-bool Motor::resetEncoder() {
+bool Motor::resetEncoder()
+{
     return _encoder->setAMT203Zero();
 }
 
-void Motor::ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pwm_mant) {
+void Motor::ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pwm_mant)
+{
     // Configuración PID mejorada
     float error_anterior = 0.0;
     float integral = 0.0;
     unsigned long tiempo_anterior = millis();
-    
+
     // Tolerancias ajustadas dinámicamente
-    const float tolerancia_movimiento = 2.0;
-    const float tolerancia_estable = 2.0;
+    const float tolerancia_movimiento = 1.0;
+    const float tolerancia_estable = 1.0;
     const float max_integral = 250.0;
-    
+
     // Nuevos parámetros para mejor control
-    const int PWM_MIN_din = 80;  // PWM mínimo dinámico (mayor que el estático)
+    const int PWM_MIN_din = 180;        // PWM mínimo dinámico (mayor que el estático)
     const float zona_transicion = 10.0; // Zona donde comienza a reducirse el PWM
-    const float factor_boost = 2;    // Factor para aumentar Kp cerca del pos_des
-    
+    const float factor_boost = 1;       // Factor para aumentar Kp cerca del pos_des
+
     // Contadores para estabilidad
     int contador_estable = 0;
-    const int min_tiempo_estable = 20;
+    const int min_tiempo_estable = 30;
 
     Serial.println("Iniciando control PID mejorado...");
 
-    while (true) {
+    while (true)
+    {
         float posicion = _encoder->leerGrados();
-        if (posicion == -1) {
+        if (posicion == -1)
+        {
             delay(5);
             continue;
         }
 
         // Normalizar ángulos para encoder circular
         float error = pos_des - posicion;
-        if (error > 180) error -= 360;
-        else if (error < -180) error += 360;
+        if (error > 180)
+            error -= 360;
+        else if (error < -180)
+            error += 360;
+
+        // Zona muerta implementada aquí (1.5° de ejemplo)
+        const float deadzone = 1.5f;
+        if (fabs(error) <= deadzone)
+        {
+            analogWrite(_en, pwm_mant); // Mantener PWM mínimo
+            contador_estable++;
+            if (contador_estable >= min_tiempo_estable)
+            {
+                Serial.println("Posición estable en deadzone");
+                break; // Salir del bucle PID
+            }
+            delay(10);
+            continue; // Saltar iteración actual
+        }
+        else
+        {
+            contador_estable = 0; // Resetear si sale de la deadzone
+        }
 
         // Tiempo para PID
         unsigned long tiempo_actual = millis();
         float dt = (tiempo_actual - tiempo_anterior) / 1000.0;
         tiempo_anterior = tiempo_actual;
-        if (dt <= 0.0 || dt > 0.1) dt = 0.01;
+        if (dt <= 0.0 || dt > 0.1)
+            dt = 0.01;
 
         // Término integral con anti-windup
         integral += error * dt;
@@ -85,7 +113,8 @@ void Motor::ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pw
 
         // Ganancia adaptativa cerca del pos_des
         float Kp_adaptativo = Kp;
-        if (abs(error) < zona_transicion) {
+        if (abs(error) < zona_transicion)
+        {
             Kp_adaptativo = Kp * factor_boost;
         }
 
@@ -93,24 +122,32 @@ void Motor::ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pw
         float salida = Kp_adaptativo * error + Ki * integral + Kd * derivada;
 
         // Verificar si está en posición
-        if (abs(error) <= tolerancia_movimiento) {
+        if (abs(error) <= tolerancia_movimiento)
+        {
             contador_estable++;
 
-            if (contador_estable >= min_tiempo_estable) {
-                int pwm_mantenimiento= PWM_MIN_din + abs(error) * 15;
-                    pwm_mantenimiento = constrain(pwm_mantenimiento, PWM_MIN_din, 150);
+            if (contador_estable >= min_tiempo_estable)
+            {
+                int pwm_mantenimiento = PWM_MIN_din + abs(error) * 15;
+                pwm_mantenimiento = constrain(pwm_mantenimiento, PWM_MIN_din, 150);
 
-                if (abs(error) > tolerancia_estable) {
+                if (abs(error) > tolerancia_estable)
+                {
                     // Control direccional con PWM dinámico
-                    if (error > 0) {
+                    if (error > 0)
+                    {
                         digitalWrite(_in1, LOW);
                         digitalWrite(_in2, HIGH);
-                    } else {
+                    }
+                    else
+                    {
                         digitalWrite(_in1, HIGH);
                         digitalWrite(_in2, LOW);
                     }
                     analogWrite(_en, pwm_mantenimiento);
-                } else {
+                }
+                else
+                {
                     // Mantener posición con PWM mínimo
                     analogWrite(_en, pwm_mant);
                     Serial.println("Posición alcanzada y estable. Manteniendo posición.");
@@ -118,26 +155,32 @@ void Motor::ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pw
                 }
 
                 Serial.printf("MANTENIENDO - Pos: %.2f°, Obj: %.2f°, Err: %.2f°, PWM: %d\n",
-                             posicion, pos_des, error, pwm_mantenimiento);
+                              posicion, pos_des, error, pwm_mantenimiento);
             }
-        } else {
+        }
+        else
+        {
             contador_estable = 0;
 
             // Control PID normal con PWM dinámico
             int duty = abs((int)salida);
-            
+
             // Asegurar un mínimo de PWM para vencer fricción estática
-            if (duty < PWM_MIN_din && duty > 0) {
+            if (duty < PWM_MIN_din && duty > 0)
+            {
                 duty = PWM_MIN_din;
             }
-            
+
             duty = constrain(duty, PWM_MIN_din, 255);
 
             // Determ_in1r dirección
-            if (salida > 0) {
+            if (salida > 0)
+            {
                 digitalWrite(_in1, LOW);
                 digitalWrite(_in2, HIGH);
-            } else {
+            }
+            else
+            {
                 digitalWrite(_in1, HIGH);
                 digitalWrite(_in2, LOW);
             }
@@ -145,159 +188,34 @@ void Motor::ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pw
             analogWrite(_en, duty);
 
             Serial.printf("MOVIENDO - Pos: %.2f°, Obj: %.2f°, Err: %.2f°, PWM: %d, I: %.2f\n",
-                         posicion, pos_des, error, duty, integral);
+                          posicion, pos_des, error, duty, integral);
         }
 
         delay(10);
     }
 
     Serial.println("Control PID completado.");
-
-    //  // Inicialización PID
-    // float error_anterior = 0.0;
-    // float integral = 0.0;
-    // unsigned long tiempo_anterior = millis();
-
-    // // Tolerancias ajustadas
-    // const float tolerancia_movimiento = 1.0; // Para considerar que llegó al pos_des
-    // const float tolerancia_estable = 1.0;    // Para mantener posición estable
-    // const float max_integral = 200.0;        // Anti-windup para integral
-
-    // // Contadores para estabilidad
-    // int contador_estable = 0;
-    // const int min_tiempo_estable = 20; // 200ms estable antes de considerar llegada
-
-    // Serial.println("Iniciando control PID mejorado...");
-
-    // // Bucle de control PID
-    // while (true)
-    // {
-    //     float posicion = _encoder->leerGrados();
-    //     if (posicion == -1)
-    //     {
-    //         delay(5);
-    //         continue;
-    //     }
-
-    //     // Normalizar ángulos para encoder circular
-    //     float error = pos_des - posicion;
-
-    //     // Manejo de ángulos circulares (si es necesario)
-    //     if (error > 180)
-    //         error -= 360;
-    //     else if (error < -180)
-    //         error += 360;
-
-    //     // Tiempo para PID
-    //     unsigned long tiempo_actual = millis();
-    //     float dt = (tiempo_actual - tiempo_anterior) / 1000.0;
-    //     tiempo_anterior = tiempo_actual;
-
-    //     if (dt <= 0.0 || dt > 0.1)
-    //         dt = 0.01; // Protección y límite máximo
-
-    //     // Término integral con anti-windup
-    //     integral += error * dt;
-    //     integral = constrain(integral, -max_integral, max_integral);
-
-    //     // Término derivativo
-    //     float derivada = (error - error_anterior) / dt;
-    //     error_anterior = error;
-
-    //     // Cálculo PID
-    //     float salida = Kp * error + Ki * integral + Kd * derivada;
-
-    //     // Verificar si está en posición
-    //     if (abs(error) <= tolerancia_movimiento)
-    //     {
-    //         contador_estable++;
-
-    //         // Si está estable por suficiente tiempo, mantener posición
-    //         if (contador_estable >= min_tiempo_estable)
-    //         {
-    //             // PWM de mantenimiento proporcional al error
-    //             int pwm_mantenimiento = pwm_mant + abs(error) * 10;
-    //             pwm_mantenimiento = constrain(pwm_mantenimiento, pwm_mant, 150);
-
-    //             // Determ_in1r dirección para mantener posición
-    //             if (abs(error) > tolerancia_estable)
-    //             {
-    //                 if (error > 0)
-    //                 {
-    //                     digitalWrite(_in1, LOW);
-    //                     digitalWrite(_in2, HIGH);
-    //                 }
-    //                 else
-    //                 {
-    //                     digitalWrite(_in1, HIGH);
-    //                     digitalWrite(_in2, LOW);
-    //                 }
-    //                 analogWrite(_en, pwm_mantenimiento);
-    //             }
-    //             else
-    //             {
-    //                 // Posición muy estable, PWM mínimo
-    //                 analogWrite(_en, pwm_mant);
-    //             }
-
-    //             Serial.printf("MANTENIENDO - Pos: %.2f°, Obj: %.2f°, Err: %.2f°, PWM: %d\n",
-    //                           posicion, pos_des, error, pwm_mantenimiento);
-
-    //             // Verificar si realmente está estable
-    //             if (abs(error) <= tolerancia_estable)
-    //             {
-    //                 Serial.println("Posición alcanzada y estable.");
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     else
-    //     {
-    //         contador_estable = 0; // Reset contador si se sale de tolerancia
-
-    //         // Control PID normal
-    //         int duty = abs((int)salida);
-    //         duty = constrain(duty, pwm_mant, 255);
-
-    //         // Determ_in1r dirección
-    //         if (salida > 0)
-    //         {
-    //             digitalWrite(_in1, LOW);
-    //             digitalWrite(_in2, HIGH);
-    //         }
-    //         else
-    //         {
-    //             digitalWrite(_in1, HIGH);
-    //             digitalWrite(_in2, LOW);
-    //         }
-
-    //         analogWrite(_en, duty);
-
-    //         Serial.printf("MOVIENDO - Pos: %.2f°, Obj: %.2f°, Err: %.2f°, PWM: %d, I: %.2f\n",
-    //                       posicion, pos_des, error, duty, integral);
-    //     }
-
-    //     delay(10); // 10 ms de espera
-    // }
-
-    // Serial.println("Control PID completado.");
-
 }
 
-void Motor::moverPWM(float pwm) {
+void Motor::moverPWM(float pwm)
+{
     // PARA CAMBIAR EL SENTIDO DE GIRO DEL MOTOR
-    if (pwm > 0) {
+    if (pwm > 0)
+    {
         digitalWrite(_in1, HIGH);
         digitalWrite(_in2, LOW);
-    } else {
+    }
+    else
+    {
         digitalWrite(_in1, LOW);
         digitalWrite(_in2, HIGH);
         pwm = -pwm;
     }
-    if (_en >= 0 && _en <= 33) {
-        analogWrite(_en,pwm);
+    if (_en >= 0 && _en <= 33)
+    {
+        analogWrite(_en, pwm);
     }
-    
+
     // digitalWrite(_in1, HIGH);
     // digitalWrite(_in2, LOW);
     // if (_en >= 0 && _en <= 33) {
@@ -305,20 +223,24 @@ void Motor::moverPWM(float pwm) {
     // }
 }
 
-void Motor::detener() {
+void Motor::detener()
+{
     digitalWrite(_in1, LOW);
     digitalWrite(_in2, LOW);
     analogWrite(_en, 0);
 }
 
-void Motor::setFCTriggered(bool triggered) {
+void Motor::setFCTriggered(bool triggered)
+{
     _fcTriggered = triggered;
 }
 
-bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant) {
+bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant)
+{
 
     float posicion_actual = _encoder->leerGrados();
-    if (posicion_actual == -1) {
+    if (posicion_actual == -1)
+    {
         Serial.println("Error leyendo encoder en kick inicial.");
         return false;
     }
@@ -336,31 +258,37 @@ bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant) {
         error_inicial += 360;
 
     // Determ_in1r dirección del kick
-    if (error_inicial > 0) {
+    if (error_inicial > 0)
+    {
         digitalWrite(_in1, LOW);
         digitalWrite(_in2, HIGH);
-    } else {
+    }
+    else
+    {
         digitalWrite(_in1, HIGH);
         digitalWrite(_in2, LOW);
     }
 
     if (error_inicial > 20)
     {
-        // Kick progresivo 
+        // Kick progresivo
         Serial.println("Iniciando kick para error > 20...");
 
         // Fase 1: Rampa de subida suave (500ms)
-        for (int pwm = pwm_mant; pwm <= 255; pwm += 50) {
+        for (int pwm = pwm_mant; pwm <= 200; pwm += 35)
+        {
             analogWrite(_en, pwm);
             delay(25); // 25ms por paso = 500ms total
 
             // Verificar si ya se está moviendo
             float pos_temp = _encoder->leerGrados();
-            if (pos_temp != -1) {
+            if (pos_temp != -1)
+            {
                 float mov_temp = abs(pos_temp - posicion_actual);
                 if (mov_temp > 180)
                     mov_temp = 360 - mov_temp;
-                if (mov_temp > 3.0) {
+                if (mov_temp > 3.0)
+                {
                     Serial.printf("Motor respondió en PWM %d, movimiento: %.2f°\n", pwm, mov_temp);
                     break;
                 }
@@ -368,10 +296,11 @@ bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant) {
         }
 
         // Fase 2: Mantener PWM constante por más tiempo (1000ms)
-        analogWrite(_en, 255);
+        analogWrite(_en, 200);
         delay(1000);
         // Fase 3: Rampa de bajada suave (300ms)
-        for (int pwm = 255; pwm >= pwm_mant; pwm -= 10) {
+        for (int pwm = 200; pwm >= pwm_mant; pwm -= 10)
+        {
             analogWrite(_en, pwm);
             delay(20); // 20ms por paso
         }
@@ -380,36 +309,44 @@ bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant) {
         delay(200);
         // Verificar que se movió significativamente
         float posicion_post_kick = _encoder->leerGrados();
-        if (posicion_post_kick == -1) {
+        if (posicion_post_kick == -1)
+        {
             analogWrite(_en, 0);
             return false;
         }
         float movimiento = abs(posicion_post_kick - posicion_actual);
         if (movimiento > 180)
             movimiento = 360 - movimiento; // Normalizar
-        if (movimiento > 20.0) {
+        if (movimiento > 20.0)
+        {
             Serial.printf("Kick suave exitoso. Movimiento total: %.2f°\n", movimiento);
             Serial.printf("Posición inicial: %.2f° -> Posición f_in1l: %.2f°\n", posicion_actual, posicion_post_kick);
             return true;
-        } else {
+        }
+        else
+        {
             Serial.printf("Kick insuficiente (movimiento: %.2f°), reintentando...\n", movimiento);
             analogWrite(_en, 0); // Asegurar que se detenga
             return false;
         }
-
-    } else {
+    }
+    else
+    {
         Serial.println("Iniciando kick progresivo");
         // Fase 1: Rampa de subida suave (500ms)
-        for (int pwm = pwm_mant; pwm <= 180; pwm += 10) {
+        for (int pwm = pwm_mant; pwm <= 200; pwm += 20)
+        {
             analogWrite(_en, pwm);
-            delay(25); // 25ms por paso = 500ms total   
+            delay(25); // 25ms por paso = 500ms total
             // Verificar si ya se está moviendo
             float pos_temp = _encoder->leerGrados();
-            if (pos_temp != -1) {
+            if (pos_temp != -1)
+            {
                 float mov_temp = abs(pos_temp - posicion_actual);
                 if (mov_temp > 180)
                     mov_temp = 360 - mov_temp;
-                if (mov_temp > 3.0) {
+                if (mov_temp > 3.0)
+                {
                     Serial.printf("Motor respondió en PWM %d, movimiento: %.2f°\n", pwm, mov_temp);
                     break;
                 }
@@ -417,40 +354,42 @@ bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant) {
         }
 
         // Fase 2: Mantener PWM constante por más tiempo (800ms)
-        analogWrite(_en, 180);
+        analogWrite(_en, 200);
         delay(800);
 
         // Fase 3: Rampa de bajada suave (300ms)
-        for (int pwm = 180; pwm >= pwm_mant; pwm -= 10) {
+        for (int pwm = 200; pwm >= pwm_mant; pwm -= 10)
+        {
             analogWrite(_en, pwm);
             delay(20); // 20ms por paso
         }
         // Fase 4: PWM mínimo por un momento para estabilizar
         analogWrite(_en, pwm_mant);
-        delay(200);
+        delay(50);
         // Verificar que se movió significativamente
         float posicion_post_kick = _encoder->leerGrados();
-        if (posicion_post_kick == -1) {
+        if (posicion_post_kick == -1)
+        {
             analogWrite(_en, 0);
             return false;
         }
         float movimiento = abs(posicion_post_kick - posicion_actual);
         if (movimiento > 180)
             movimiento = 360 - movimiento; // Normalizar
-        if (movimiento > 15.0) {
+        if (movimiento > 15.0)
+        {
             Serial.printf("Kick progresivo exitoso. Movimiento total: %.2f°\n", movimiento);
             Serial.printf("Posición inicial: %.2f° -> Posición f_in1l: %.2f°\n", posicion_actual, posicion_post_kick);
             return true;
-        } else {
+        }
+        else
+        {
             Serial.printf("Kick insuficiente (movimiento: %.2f°), reintentando...\n", movimiento);
             analogWrite(_en, 0); // Asegurar que se detenga
             return false;
         }
-
     }
-
 }
-
 
 // Función de kick inicial fuera de la clase
 // Función de kick inicial mejorada
@@ -617,15 +556,17 @@ bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant) {
 //     }
 // }
 
-void Motor::moverAGrados(double pos) {
+void Motor::moverAGrados(double pos)
+{
     float inicio = _encoder->leerGrados();
     float destino = inicio + pos;
 
-    float actual=_encoder->leerGrados();
-    float error = destino-actual;
+    float actual = _encoder->leerGrados();
+    float error = destino - actual;
     int pwm = PWM_VELOCIDAD;
 
-    while(abs(error)>0){
+    while (abs(error) > 0)
+    {
         actual = _encoder->leerGrados();
         analogWrite(_en, pwm);
         delay(5);
