@@ -6,9 +6,9 @@
 extern WiFiClient esp32s3_cli;
 extern String mensaje;
 
-extern const uint16_t matlabport=5000; // Puerto de Matlab
+extern const uint16_t matlabport; // Puerto de Matlab
 
-extern WiFiServer matlabServer(matlabport);
+extern WiFiServer matlabServer;
 extern WiFiClient matlabClient;
 
 #define Timeout_Wifi 20000 // Timeout en ms. Por defecto 20 segundos.
@@ -40,3 +40,4 @@ void mutex_setup();
 void mantener_wifi(void * parameter);
 void recibir_mensaje(void * parameter);
 void enviar(String texto_env);
+void recibir_mensaje_matlab(void *parameter);

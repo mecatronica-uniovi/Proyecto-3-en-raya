@@ -48,11 +48,11 @@ void setup()
 {
     Serial.begin(115200);
     mutex_setup(); // Se inicializa el mutex y se dejan 2 segundos para que todo se prepare
-    cli.setTimeout(2000);
+    esp32s3_cli.setTimeout(2000);
     delay(1000);
     xTaskCreate(mantener_wifi, "Mantiene la conexión WiFi activa", 20000, NULL, 5, NULL);
     xTaskCreate(recibir_mensaje, "Recibe e imprime por pantalla los datos enviados por el cliente", 20000, NULL, 5, NULL);
-
+    xTaskCreatePinnedToCore(recibir_mensaje_matlab, "ServidorMatlab", 8192, NULL, 1, NULL, 1);
     // Configuración de la cámara
     camara.InitCamara();
     // // Conexión WiFi
@@ -88,7 +88,7 @@ void loop()
     //  Serial.println(mensaje);
     if (mensaje.startsWith("TURNO_IA"))
     {
-        mensaje="";
+        mensaje = "";
         Serial.println("Recibido el mensaje TURNO_IA");
         turno = PIEZA_O; // Cambiar turno a IA
         // Realizar una captura para conocer el estado del tablero
@@ -97,37 +97,36 @@ void loop()
         if (!camara.fb)
         {
             Serial.println("Error al capturar la imagen");
-            // client.write("E", 1); // Enviar un error al cliente
             enviar("Interfaz-ErrorCaptura\n");
-            // continue;
+            return;
         }
 
-        // Enviar tamaño de la imagen primero
-        // uint32_t imgSize = camara.fb->len;
-        // if (client.write((uint8_t *)&imgSize, sizeof(imgSize)) != sizeof(imgSize))
-        // {
-        //     Serial.println("Error al enviar tamaño de la imagen");
-        //     esp_camera_fb_return(camara.fb); // Liberar memoria
-        //     break;
-        // }
+        // Enviar cabecera textual
+        const char *cabecera = "IMG\n";
+        matlabClient.write((const uint8_t *)cabecera, strlen(cabecera));
 
-        // Enviar la imagen completa a MATLAB para hacer el procesamiento
-        // if (client.write(camara.fb->buf, camara.fb->len) != camara.fb->len)
-        // {
-        //     Serial.println("Error al enviar la imagen");
-        // }
-        // else
-        // {
-        //     Serial.println("Imagen enviada correctamente");
-        //     camara.lastCapture = millis(); // Actualizar el tiempo de la última captura
-        // }
-        // esp_camera_fb_return(camara.fb); // Liberar memoria
-        // camara.fb = NULL;
+        // Enviar tamaño de la imagen
+        uint32_t imgSize = camara.fb->len;
+        matlabClient.write((uint8_t *)&imgSize, sizeof(imgSize));
+
+        // Enviar la imagen
+        if (matlabClient.write(camara.fb->buf, camara.fb->len) != camara.fb->len)
+        {
+            Serial.println("Error al enviar la imagen");
+        }
+        else
+        {
+            Serial.println("Imagen enviada correctamente");
+            camara.lastCapture = millis();
+        }
+
+        esp_camera_fb_return(camara.fb);
+        camara.fb = NULL;
     }
 
     else if (mensaje.startsWith("TABLERO:"))
     {
-        mensaje="";
+        mensaje = "";
         turno = PIEZA_O;                                       // Cambiar turno a IA
         String estado = mensaje.substring(8);                  // Eliminar la cabecera "TABLERO:"
         tablero.ActualizarTableroDesdeString(estado, tablero); // Actualizar el tablero con el estado recibido
@@ -189,7 +188,7 @@ void loop()
 
     else if (mensaje.startsWith("RESET"))
     {
-        mensaje="";
+        mensaje = "";
         tablero.InitTablero(); // Reiniciar el tablero
         tablero.ShowTablero(); // Mostrar el estado del tablero después del reinicio
         Serial.println("Tablero reiniciado");
@@ -242,5 +241,5 @@ void loop()
     //     FastLED.show(); // Mostrar los LEDs encendidos
     // }
 
-    delay(1000);
+    delay(1);
 }

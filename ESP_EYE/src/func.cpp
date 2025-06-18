@@ -1,5 +1,6 @@
 #include <Myserver.h>
-WiFiServer _server(5000);
+const uint16_t matlabport = 5000;
+WiFiServer matlabServer(matlabport);
 // Variables para el hilo de conexión WiFi
 // Red WiFi (debes cambiar esto según tu configuración)
 const char *ssid = "Interfaz";     // SSID de tu router TL-WR802N
@@ -8,8 +9,15 @@ String mensaje;
 static SemaphoreHandle_t mutex = NULL; // Variable que contendrá el mutex para proteger las medidas
 
 WiFiClient esp32s3_cli;
+WiFiClient matlabClient;
 
-//
+
+
+IPAddress local_IP(192, 168, 0, 45);
+IPAddress gateway(192, 168, 0, 1);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress primaryDNS(8, 8, 8, 8);   // Opcional
+IPAddress secondaryDNS(8, 8, 4, 4); // Opcional
 
 void mutex_setup()
 {                                    // Función que genera el mutex
@@ -28,6 +36,10 @@ void mantener_wifi(void *parameter)
 
         Serial.println("[WIFI] Conectando de nuevo");
         WiFi.mode(WIFI_STA);
+        if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS))
+        {
+            Serial.println("Error al configurar IP fija");
+        }
         WiFi.begin(ssid, password);
         unsigned long tiempo_intento = millis(); // Empieza a contar el tiempo que lleva intentando la conexión
 
@@ -43,6 +55,7 @@ void mantener_wifi(void *parameter)
             vTaskDelay(Tiempo_recuperacion / portTICK_PERIOD_MS);
             continue;
         }
+        matlabServer.begin(); // Inicia el servidor de MATLAB
         Serial.println("[WIFI] Conectado");
     }
 }
@@ -158,4 +171,33 @@ void recibir_mensaje(void *parameter)
 void enviar(String texto_env)
 {
     esp32s3_cli.write((const uint8_t *)texto_env.c_str(), texto_env.length());
+}
+
+
+void recibir_mensaje_matlab(void *parameter) {
+    for (;;) {
+        if (!matlabClient || !matlabClient.connected()) {
+            matlabClient = matlabServer.available();
+            if (matlabClient) {
+                Serial.println("[MATLAB] Cliente conectado.");
+            }
+        }
+
+        if (matlabClient && matlabClient.connected() && matlabClient.available()) {
+            String msg = matlabClient.readStringUntil('\n');
+            Serial.print("[MATLAB] Recibido: ");
+            Serial.println(msg);
+
+            if(msg.startsWith("Camara-TURNO_IA"))
+            {
+                mensaje = "TURNO_IA\n";
+            }
+
+            // Ejemplo: respuesta de prueba
+            matlabClient.println("Recibido por la cámara: " + msg);
+            msg = ""; // Limpiar el mensaje después de procesarlo
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
 }
