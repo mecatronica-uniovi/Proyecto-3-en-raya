@@ -68,9 +68,9 @@ void recibir_mensaje(void *parameter)
                 if (ind != -1)
                 {
                     txt = _conn[j].recv.substring(9, ind); // ← CORRECTO
-                    _conn[j].recv = "";
                     SendTo("Interfaz", (txt + "\n").c_str());
                 }
+                _conn[j].recv = "";
             }
             if (_conn[j].recv.startsWith("M5-"))
             {
@@ -79,10 +79,10 @@ void recibir_mensaje(void *parameter)
                 if (ind != -1)
                 {
                     txt = _conn[j].recv.substring(3, ind); // ← CORRECTO
-                    _conn[j].recv = "";
                     printf("1\n");
                     SendTo("M5", (txt + "\n").c_str());
                 }
+                _conn[j].recv = "";
             }
             if (_conn[j].recv.startsWith("Camara-"))
             {
@@ -91,10 +91,10 @@ void recibir_mensaje(void *parameter)
                 if (ind != -1)
                 {
                     txt = _conn[j].recv.substring(7, ind); // ← CORRECTO
-                    _conn[j].recv = "";
                     printf("2\n");
                     SendTo("Camara", (txt + "\n").c_str());
                 }
+                _conn[j].recv = "";
             }
             if (_conn[j].recv.startsWith("Matlab-"))
             {
@@ -103,11 +103,12 @@ void recibir_mensaje(void *parameter)
                 if (ind != -1)
                 {
                     txt = _conn[j].recv.substring(7, ind); // ← CORRECTO
-                    _conn[j].recv = "";
                     printf("3\n");
                     SendTo("Matlab", (txt + "\n").c_str());
                 }
+                _conn[j].recv = "";
             }
+            _conn[j].recv = "";
             vTaskDelay(pdMS_TO_TICKS(50));
         }
         vTaskDelay(1);
