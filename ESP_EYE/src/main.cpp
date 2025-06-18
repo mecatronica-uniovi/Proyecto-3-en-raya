@@ -88,6 +88,7 @@ void loop()
     //  Serial.println(mensaje);
     if (mensaje.startsWith("TURNO_IA"))
     {
+        mensaje="";
         Serial.println("Recibido el mensaje TURNO_IA");
         turno = PIEZA_O; // Cambiar turno a IA
         // Realizar una captura para conocer el estado del tablero
@@ -126,6 +127,7 @@ void loop()
 
     else if (mensaje.startsWith("TABLERO:"))
     {
+        mensaje="";
         turno = PIEZA_O;                                       // Cambiar turno a IA
         String estado = mensaje.substring(8);                  // Eliminar la cabecera "TABLERO:"
         tablero.ActualizarTableroDesdeString(estado, tablero); // Actualizar el tablero con el estado recibido
@@ -187,6 +189,7 @@ void loop()
 
     else if (mensaje.startsWith("RESET"))
     {
+        mensaje="";
         tablero.InitTablero(); // Reiniciar el tablero
         tablero.ShowTablero(); // Mostrar el estado del tablero después del reinicio
         Serial.println("Tablero reiniciado");

@@ -3,9 +3,13 @@
 #include <WiFiClient.h>
 #include <vector>
 
-extern int modo_func;
-extern WiFiClient cli;
+extern WiFiClient esp32s3_cli;
 extern String mensaje;
+
+extern const uint16_t matlabport=5000; // Puerto de Matlab
+
+extern WiFiServer matlabServer(matlabport);
+extern WiFiClient matlabClient;
 
 #define Timeout_Wifi 20000 // Timeout en ms. Por defecto 20 segundos.
 #define Tiempo_recuperacion 30000 // Tiempo de espera en ms para intentar recuperar la conexión. Por defecto 30 segundos.

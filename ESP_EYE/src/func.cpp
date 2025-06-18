@@ -7,8 +7,9 @@ const char *password = "10414538"; // Tu clave WiFi
 String mensaje;
 static SemaphoreHandle_t mutex = NULL; // Variable que contendrá el mutex para proteger las medidas
 
-WiFiClient cli;
-int modo_func = 0;
+WiFiClient esp32s3_cli;
+
+//
 
 void mutex_setup()
 {                                    // Función que genera el mutex
@@ -67,12 +68,12 @@ void recibir_mensaje(void *parameter)
         case DESCONECTADO:
             if (ahora - tiempoUltimoIntento > 2000)
             { // intenta cada 2s
-                if (cli.connect("192.168.0.50", 55355))
+                if (esp32s3_cli.connect("192.168.0.50", 55355))
                 {
                     Serial.println("Conectado al servidor");
                     delay(3000);
                     String texto1 = "<<NAMECamara>>\n";
-                    cli.write((const uint8_t *)texto1.c_str(), texto1.length());
+                    esp32s3_cli.write((const uint8_t *)texto1.c_str(), texto1.length());
                     estado = ESPERANDO_RESPUESTA;
                 }
                 else
@@ -84,15 +85,15 @@ void recibir_mensaje(void *parameter)
             break;
 
         case ESPERANDO_RESPUESTA:
-            if (cli.available())
+            if (esp32s3_cli.available())
             {
-                String recv = cli.readStringUntil('\n');
+                String recv = esp32s3_cli.readStringUntil('\n');
                 Serial.print("RECV: ");
                 Serial.println(recv);
                 if (recv == "<<NAME>>")
                 {
                     String texto = "<<NAMECamara>>\n";
-                    cli.write((const uint8_t *)texto.c_str(), texto.length());
+                    esp32s3_cli.write((const uint8_t *)texto.c_str(), texto.length());
                     estado = CONECTADO;
                 }
                 Serial.print("Te saludo\n");
@@ -101,9 +102,9 @@ void recibir_mensaje(void *parameter)
             break;
 
         case CONECTADO:
-            if (cli.available())
+            if (esp32s3_cli.available())
             {
-                String recv = cli.readStringUntil('\n');
+                String recv = esp32s3_cli.readStringUntil('\n');
                 Serial.print("MENSAJE: ");
                 Serial.print(recv);
 
@@ -139,7 +140,7 @@ void recibir_mensaje(void *parameter)
                 recv = "";
             }
 
-            if (!cli.connected())
+            if (!esp32s3_cli.connected())
             {
                 Serial.println("Se perdió conexión");
                 estado = DESCONECTADO;
@@ -156,5 +157,5 @@ void recibir_mensaje(void *parameter)
 
 void enviar(String texto_env)
 {
-    cli.write((const uint8_t *)texto_env.c_str(), texto_env.length());
+    esp32s3_cli.write((const uint8_t *)texto_env.c_str(), texto_env.length());
 }
