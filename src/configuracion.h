@@ -7,6 +7,16 @@
 
 using namespace std;
 
+enum class EstadoRobot
+{
+    INICIALIZANDO,
+    ESPERANDO,
+    MOVIENDO,
+    DETENIDO,
+    ERROR,
+    TEST
+};
+
 // Angulos maximos pinza
 const int pinza_abierta=90;
 const int pinza_cerrada=120;
@@ -68,8 +78,7 @@ const int PWM_MANT_CODO=90;
 #define CS2 41
 #define CS3 38
 
-// const array<double, 4> L_eslab={0,125,125,90};
-// const array<double, 4> L_eslab={200,210,300,50}; 
-const array<double, 4> L_eslab={55,250,220,145}; // Longitudes de los eslabones del robot
+const array<double, 4> L_eslab={56.75,250,220,142}; // Longitudes de los eslabones del robot
+const double L_tablero=164.25;
 
 #endif

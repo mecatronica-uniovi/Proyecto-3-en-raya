@@ -47,6 +47,8 @@ float Encoder::leerGrados() {
     ABSposition = (temp[0] << 8) + temp[1];
 
     deg = ABSposition * 0.08789;
+    if (deg>180.0)
+        deg=deg-360.0;
     return deg;
 }
 

@@ -1,46 +1,50 @@
 #include "funciones_cinem.h"
+#include <iostream>
+#include "configuracion.h"
 
-// void cinematicaDirecta(array<double, 4> theta, array<double, 4> L){
-//     // Conversión de ángulos (º -> rad)
-//     theta[0]=theta[0]*PI/180.0;
-//     theta[1]=(theta[1]*PI/180.0)+PI/2;
-//     theta[2]=theta[2]*PI/180.0;
-//     theta[3]=theta[3]*PI/180.0;
+using namespace std;
 
-//     // Parámetros de D-H
-//     array<double, 5> a={0, L[0], L[1], L[2], L[3]}; // Longitudes de eslabones
-//     array<double, 5> alpha={0, PI / 2, 0, 0, 0};    // Ángulos entre ejes Z
-//     array<double, 5> d={0, 0, 0, 0, 0};             // Traslaciones en Z (mecanismo plano = 0)
+void cinematicaDirecta(array<double, 4> theta, array<double, 4> L){
+    // Conversión de ángulos (º -> rad)
+    theta[0]=theta[0]*PI/180.0;
+    theta[1]=(theta[1]*PI/180.0)+PI/2;
+    theta[2]=theta[2]*PI/180.0;
+    theta[3]=theta[3]*PI/180.0;
+
+    // Parámetros de D-H
+    array<double, 5> a={-54, L[0], L[1], L[2], L[3]}; // Longitudes de eslabones
+    array<double, 5> alpha={0, PI / 2, 0, 0, 0};    // Ángulos entre ejes Z
+    array<double, 5> d={0, 0, 0, 0, 0};             // Traslaciones en Z (mecanismo plano = 0)
  
-//     // Inicialización de la matriz de transformación como matriz identidad
-//     Matriz::M4x4 T=Matriz::identidad();
+    // Inicialización de la matriz de transformación como matriz identidad
+    Matriz::M4x4 T=Matriz::identidad();
 
-//     // Bucle de cálculo empleando la funcion dh de matrices.h
-//     for (int i=0;i<4;i++){
-//         Matriz::M4x4 Ti=Matriz::dh(-theta[i], a[i], alpha[i], d[i]);
-//         T = Matriz::multiplicar(T, Ti);
-//     }
+    // Bucle de cálculo empleando la funcion dh de matrices.h
+    for (int i=0;i<4;i++){
+        Matriz::M4x4 Ti=Matriz::dh(-theta[i], a[i], alpha[i], d[i]);
+        T = Matriz::multiplicar(T, Ti);
+    }
 
-//     // Añado el último eslabón a la matriz
-//     Matriz::M4x4 T5 = Matriz::dh(0, a[4], 0, 0);
-//     T=Matriz::multiplicar(T, T5);
+    // Añado el último eslabón a la matriz
+    Matriz::M4x4 T5 = Matriz::dh(0, a[4], 0, 0);
+    T=Matriz::multiplicar(T, T5);
 
-//     // Redondeos a 0 de la posición
-//     double X=T.m[1][3];
-//     if(abs(X)<1e-3){
-//         X=0;
-//     }
-//     double Y=-T.m[0][3];
-//     if(abs(Y)<1e-3){
-//         Y=0;
-//     }
-//     double Z=-T.m[2][3];
-//     if(abs(Z)<1e-3){
-//         Z=0;
-//     }
+    // Redondeos a 0 de la posición
+    double X=T.m[1][3];
+    if(abs(X)<1e-3){
+        X=0;
+    }
+    double Y=-T.m[0][3];
+    if(abs(Y)<1e-3){
+        Y=0;
+    }
+    double Z=-T.m[2][3];
+    if(abs(Z)<1e-3){
+        Z=0;
+    }
     
-//     cout<<"\nPluma en coordenadas: [" << X << ", " << Y << ", " << Z << "]\n";
-// }
+    cout<<"\nPinza en coordenadas: [" << X << ", " << Y << ", " << Z << "]\n";
+}
 
 /*Cálculo de los ángulos necesarios en las articulaciones para alcanzar la
 posición X,Y,Z solicitada. Dado que se trata de un mecanismo plano, primero
@@ -71,13 +75,34 @@ array<double, 4> cinematicaInversa(array<double, 3> xyz, array<double, 4> L){
 
     // Conversión a grados
     angulos[0]=theta_0*180/PI;
-    angulos[1]=theta_1*180/PI-(0.57+5.39);
-    angulos[2]=theta_2*180/PI-(60+51.32+0.83);
-    angulos[3]=theta_3*180/PI-(63.29-1.40);
+    angulos[1]=theta_1*180/PI;
+    angulos[2]=theta_2*180/PI;
+    angulos[3]=theta_3*180/PI;
 
     return angulos;
 }
 
-array<array<double,3>,2> origen_destino(){
-    
+array<double, 4> GradosRobot_a_Encoder(array<double, 4> ang_robot){
+    array<double, 4> ang_encoder={0,0,0,0};
+    printf("Angulos robot: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_robot[0], ang_robot[1], ang_robot[2], ang_robot[3]);
+    ang_encoder[0]=ang_robot[0];
+    ang_encoder[1]=ang_robot[1]-3.42;       // Hombro
+    ang_encoder[2]=90-ang_robot[2]+41.22;   // Codo
+    ang_encoder[3]=ang_robot[3];            // Pinza
+    printf("Angulos encoders: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_encoder[0], ang_encoder[1], ang_encoder[2], ang_encoder[3]);
+    return ang_encoder;
+}
+
+array<double, 4> GradosEncoder_a_Robot(const array<double, 4>& ang_enc,const array<double, 4>& ang_calib){
+    array<double, 4> ang_robot={0,0,0,0};
+    printf("Angulos encoders: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_enc[0], ang_enc[1], ang_enc[2], ang_enc[3]);
+    ang_robot[0]=ang_enc[0]+ang_calib[0];
+    ang_robot[1]=ang_enc[1]+ang_calib[1];   // Hombro
+    // if(ang_enc[2]>180){
+    //     ang_enc[2]=ang_enc[2]-360;      // Normalizar ángulo del codo
+    // }
+    ang_robot[2]=ang_enc[2]+ang_calib[2];   // Codo
+    ang_robot[3]=ang_enc[3];                // Pinza   
+    printf("Angulos robot: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_robot[0], ang_robot[1], ang_robot[2], ang_robot[3]);
+    return ang_robot;
 }
