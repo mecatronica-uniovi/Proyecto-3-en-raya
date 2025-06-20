@@ -18,7 +18,7 @@ void cinematicaDirecta(array<double, 4> theta, array<double, 4> L){
  
     // Inicialización de la matriz de transformación como matriz identidad
     Matriz::M4x4 T=Matriz::identidad();
-
+    
     // Bucle de cálculo empleando la funcion dh de matrices.h
     for (int i=0;i<4;i++){
         Matriz::M4x4 Ti=Matriz::dh(-theta[i], a[i], alpha[i], d[i]);
@@ -52,7 +52,7 @@ se trabaja en coordenadas W,Z y luego W se desdobla en X,Y según el ángulo de
 la base del robot. */
 array<double, 4> cinematicaInversa(array<double, 3> xyz, array<double, 4> L){
     array<double, 4> angulos;
-
+    xyz[3]+=80;
     // Posiciones de la muñeca del mecanismo plano W2,Z2. Theta2 con teorema del coseno
     float z2=xyz[2]+L[3];
     float w2=sqrt(xyz[0]*xyz[0]+xyz[1]*xyz[1]);
@@ -82,12 +82,12 @@ array<double, 4> cinematicaInversa(array<double, 3> xyz, array<double, 4> L){
     return angulos;
 }
 
-array<double, 4> GradosRobot_a_Encoder(array<double, 4> ang_robot){
+array<double, 4> GradosRobot_a_Encoder(array<double, 4> ang_robot, array<double,4> ang_cal){
     array<double, 4> ang_encoder={0,0,0,0};
     printf("Angulos robot: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_robot[0], ang_robot[1], ang_robot[2], ang_robot[3]);
     ang_encoder[0]=ang_robot[0];
-    ang_encoder[1]=ang_robot[1]-3.42;       // Hombro
-    ang_encoder[2]=90-ang_robot[2]+41.22;   // Codo
+    ang_encoder[1]=ang_robot[1]-ang_cal[1];       // Hombro
+    ang_encoder[2]=90-ang_robot[2];   // Codo
     ang_encoder[3]=ang_robot[3];            // Pinza
     printf("Angulos encoders: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_encoder[0], ang_encoder[1], ang_encoder[2], ang_encoder[3]);
     return ang_encoder;
