@@ -30,6 +30,7 @@ public:
 
 
     bool kick_inicial_mejorado(float objetivo, int pwm_mant);
+    bool frenado_controlado(float pos_objetivo, float umbral_error, int pwm_min);
 
     // Encoder
     Encoder *_encoder = nullptr;

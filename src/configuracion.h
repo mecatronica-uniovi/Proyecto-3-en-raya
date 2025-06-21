@@ -14,36 +14,38 @@ enum class EstadoRobot
     MOVIENDO,
     DETENIDO,
     ERROR,
-    TEST
+    TEST,
+    AJUSTE
 };
 
 // Angulos maximos pinza
-const int pinza_abierta=90;
-const int pinza_cerrada=120;
+const int pinza_abierta=120;
+const int pinza_cerrada=90;
+#define _PIN_SERVO 4
 
 // Periodo de muestreo
 const float Ts = 0.01;
 
 // Ganancias PID base
-#define Kp_base 15 //Ganancias de la base no hace falta tocarlas
-#define Ki_base 2
-#define Kd_base 1
+extern float Kp_base; //Ganancias de la base
+extern float Ki_base;
+extern float Kd_base;
 
 // Ganancias PID hombro
-#define Kp_hombro_subir 12 // Ganancias del hombro subir
-#define Ki_hombro_subir 0
-#define Kd_hombro_subir 1.2
+extern float Kp_hombro_subir; // Ganancias del hombro subir
+extern float Ki_hombro_subir;
+extern float Kd_hombro_subir;
 
-#define Kp_hombro_bajar 0.5 // Ganancias del hombro revisar
-#define Ki_hombro_bajar 0
-#define Kd_hombro_bajar 0
+extern float Kp_hombro_bajar; // Ganancias del hombro revisar
+extern float Ki_hombro_bajar;
+extern float Kd_hombro_bajar;
 
 // Ganancias PID codo
-#define Kp_codo_subir 50
-#define Kp_codo_bajar 35
-#define Ki_codo 0
-#define Kd_codo_subir 0.1
-#define Kd_codo_bajar 0
+extern float Kp_codo_subir;
+extern float Kp_codo_bajar;
+extern float Ki_codo;
+extern float Kd_codo_subir;
+extern float Kd_codo_bajar;
 
 // Pines de la PCB para finales de carrera
 const int fc1 = 9;

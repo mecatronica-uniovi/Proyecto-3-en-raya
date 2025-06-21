@@ -46,9 +46,14 @@ void Motor::ControlPID_Motor(float pos_des, float Kp, float Ki, float Kd, int pw
     unsigned long tiempo_anterior = millis();
 
     // Tolerancias ajustadas dinámicamente
-    const float tolerancia_movimiento = 1.0;
-    const float tolerancia_estable = 1.0;
+    float tolerancia_movimiento = 1.6;
+    float tolerancia_estable = 1.6;
     const float max_integral = 250.0;
+
+    if(pwm_mant==PWM_MANT_CODO){
+        tolerancia_estable = 2.5; // Ajuste específico para el codo
+        tolerancia_movimiento = 2.5; // Ajuste específico para el codo
+    }
 
     // Nuevos parámetros para mejor control
     const int PWM_MIN_din = 180;        // PWM mínimo dinámico (mayor que el estático)
@@ -216,11 +221,6 @@ void Motor::moverPWM(float pwm)
         analogWrite(_en, pwm);
     }
 
-    // digitalWrite(_in1, HIGH);
-    // digitalWrite(_in2, LOW);
-    // if (_en >= 0 && _en <= 33) {
-    //     analogWrite(_en, pwm);
-    // }
 }
 
 void Motor::detener()
@@ -244,10 +244,6 @@ bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant)
         Serial.println("Error leyendo encoder en kick inicial.");
         return false;
     }
-
-    // if (pos_des > posicion_actual) {
-    //     return false;
-    // } // Verificar esta línea, lo que quiero evitar es que se produzca el kick cuando el hombro baja
 
     float error_inicial = pos_des - posicion_actual;
 
@@ -391,170 +387,109 @@ bool Motor::kick_inicial_mejorado(float pos_des, int pwm_mant)
     }
 }
 
-// Función de kick inicial fuera de la clase
-// Función de kick inicial mejorada
-// bool kick_inicial_mejorado(float error_inicial, int en, int _in1, int _in2, int csEncoder, int PWM_MIN)
-// {
-//     float posicion_actual = _encoder->leerGrados();
-//     // if (posicion_actual == -1)
-//     // {
-//     //     Serial.println("Error leyendo encoder en kick inicial.");
-//     //     return false;
-//     // }
+bool Motor::frenado_controlado(float pos_objetivo, float umbral_error, int pwm_min) {
+    float pos_actual = _encoder->leerGrados();
+    if (pos_actual == -1) {
+        Serial.println("Error de encoder durante frenado");
+        detener();
+        return false;
+    }
 
-//     // float error_inicial = pos_des - posicion_actual;
+    float error = pos_objetivo - pos_actual;
+    
+    // Normalizar ángulo
+    if (error > 180) error -= 360;
+    else if (error < -180) error += 360;
 
-//     // Normalizar ángulo
-//     if (error_inicial > 180)
-//         error_inicial -= 360;
-//     else if (error_inicial < -180)
-//         error_inicial += 360;
+    // Configuración de frenado agresivo pero con bajada suave
+    const int pwm_frenado_agresivo = 255;  // PWM máximo para frenado rápido (aumentado desde 220)
+    const int pwm_bajada_suave = 230;      // PWM reducido para movimiento de bajada
+    const unsigned long tiempo_max_frenado = 3000;  // ms (aumentado para permitir frenado más progresivo)
 
-//     // Determ_in1r dirección del kick
-//     if (error_inicial > 0)
-//     {
-//         digitalWrite(_in1, LOW);
-//         digitalWrite(_in2, HIGH);
-//     }
-//     else
-//     {
-//         digitalWrite(_in1, HIGH);
-//         digitalWrite(_in2, LOW);
-//     }
+    // Determinar dirección
+    bool frenar_en_reversa = (error > 0);
+    
+    // Fase 1: Frenado agresivo en dirección opuesta
+    if (frenar_en_reversa) {
+        digitalWrite(_in1, HIGH);
+        digitalWrite(_in2, LOW);
+    } else {
+        digitalWrite(_in1, LOW);
+        digitalWrite(_in2, HIGH);
+    }
 
-//     if (error_inicial > 20)
-//     {
-//         // Kick progresivo y suave - rampa de subida
-//         Serial.println("Iniciando kick progresivo...");
+    analogWrite(_en, pwm_frenado_agresivo);
+    unsigned long inicio_frenado = millis();
 
-//         // Fase 1: Rampa de subida suave (500ms)
-//         for (int pwm = PWM_MIN; pwm <= 255; pwm += 85)
-//         {
-//             analogWrite(en, pwm);
-//             delay(25); // 25ms por paso = 500ms total
+    while ((millis() - inicio_frenado) < tiempo_max_frenado) {
+        pos_actual = _encoder->leerGrados();
+        if (pos_actual == -1) {
+            Serial.println("Error lectura encoder");
+            detener();
+            return false;
+        }
 
-//             // Verificar si ya se está moviendo
-//             float pos_temp = _encoder->leerGrados();
-//             if (pos_temp != -1)
-//             {
-//                 float mov_temp = abs(pos_temp - posicion_actual);
-//                 if (mov_temp > 180)
-//                     mov_temp = 360 - mov_temp;
-//                 if (mov_temp > 3.0)
-//                 {
-//                     Serial.printf("Motor respondió en PWM %d, movimiento: %.2f°\n", pwm, mov_temp);
-//                     break;
-//                 }
-//             }
-//         }
+        error = pos_objetivo - pos_actual;
+        if (error > 180) error -= 360;
+        else if (error < -180) error += 360;
 
-//         // Fase 2: Mantener PWM constante por más tiempo (1000ms)
-//         analogWrite(en, 255);
-//         delay(1000);
+        // Condición de salida anticipada si estamos cerca
+        if (fabs(error) <= umbral_error * 2) {  // Umbral más amplio para transición
+            break;
+        }
+        delay(10);
+    }
 
-//         // Fase 3: Rampa de bajada suave (300ms)
-//         for (int pwm = 255; pwm >= PWM_MIN; pwm -= 10)
-//         {
-//             analogWrite(en, pwm);
-//             delay(20); // 20ms por paso
-//         }
+    // Fase 2: Transición a bajada suave (solo si el error es positivo - necesita bajar)
+    if (error > 0) {
+        Serial.println("Iniciando fase de bajada controlada");
+        
+        // Configuración para bajada suave
+        digitalWrite(_in1, LOW);   // Dirección de bajada (depende de tu configuración)
+        digitalWrite(_in2, HIGH);
+        
+        // Rampa de aceleración suave para bajada
+        for (int pwm = pwm_min; pwm <= pwm_bajada_suave; pwm += 50) {
+            analogWrite(_en, pwm);
+            delay(30);
+        }
 
-//         // Fase 4: PWM mínimo por un momento para estabilizar
-//         analogWrite(en, PWM_MIN);
-//         delay(200);
+        // Mantener PWM bajo por tiempo controlado
+        analogWrite(_en, pwm_bajada_suave);
+        delay(300);  // Tiempo de bajada controlada
 
-//         // Verificar que se movió significativamente
-//         float posicion_post_kick = _encoder->leerGrados();
-//         if (posicion_post_kick == -1)
-//         {
-//             analogWrite(en, 0);
-//             return false;
-//         }
+        // Rampa de desaceleración final
+        for (int pwm = pwm_bajada_suave; pwm >= pwm_min; pwm -= 30) {
+            analogWrite(_en, pwm);
+            delay(40);
+        }
+    }
 
-//         float movimiento = abs(posicion_post_kick - posicion_actual);
-//         if (movimiento > 180)
-//             movimiento = 360 - movimiento; // Normalizar
+    // Fase final: Ajuste fino
+    analogWrite(_en, pwm_min);
+    delay(200);
 
-//         if (movimiento > 20.0)
-//         {
-//             Serial.printf("Kick suave exitoso. Movimiento total: %.2f°\n", movimiento);
-//             Serial.printf("Posición inicial: %.2f° -> Posición f_in1l: %.2f°\n", posicion_actual, posicion_post_kick);
-//             return true;
-//         }
-//         else
-//         {
-//             Serial.printf("Kick insuficiente (movimiento: %.2f°), reintentando...\n", movimiento);
-//             analogWrite(en, 0); // Asegurar que se detenga
-//             return false;
-//         }
-//     }
-//     else
-//     {
-//         // Kick progresivo y suave - rampa de subida
-//         Serial.println("Iniciando kick progresivo...");
+    // Verificación final
+    pos_actual = _encoder->leerGrados();
+    if (pos_actual == -1) {
+        detener();
+        return false;
+    }
 
-//         // Fase 1: Rampa de subida suave (500ms)
-//         for (int pwm = PWM_MIN; pwm <= 250; pwm += 20)
-//         {
-//             analogWrite(en, pwm);
-//             delay(25); // 25ms por paso = 500ms total
+    error = pos_objetivo - pos_actual;
+    if (error > 180) error -= 360;
+    else if (error < -180) error += 360;
 
-//             // Verificar si ya se está moviendo
-//             float pos_temp = _encoder->leerGrados();
-//             if (pos_temp != -1)
-//             {
-//                 float mov_temp = abs(pos_temp - posicion_actual);
-//                 if (mov_temp > 180)
-//                     mov_temp = 360 - mov_temp;
-//                 if (mov_temp > 3.0)
-//                 {
-//                     Serial.printf("Motor respondió en PWM %d, movimiento: %.2f°\n", pwm, mov_temp);
-//                     break;
-//                 }
-//             }
-//         }
+    detener();
 
-//         // Fase 2: Mantener PWM constante por más tiempo (800ms)
-//         analogWrite(en, 200);
-//         delay(800);
-
-//         // Fase 3: Rampa de bajada suave (300ms)
-//         for (int pwm = 200; pwm >= PWM_MIN; pwm -= 10)
-//         {
-//             analogWrite(en, pwm);
-//             delay(20); // 20ms por paso
-//         }
-
-//         // Fase 4: PWM mínimo por un momento para estabilizar
-//         analogWrite(en, PWM_MIN);
-//         delay(200);
-
-//         // Verificar que se movió significativamente
-//         float posicion_post_kick = _encoder->leerGrados();
-//         if (posicion_post_kick == -1)
-//         {
-//             analogWrite(en, 0);
-//             return false;
-//         }
-
-//         float movimiento = abs(posicion_post_kick - posicion_actual);
-//         if (movimiento > 180)
-//             movimiento = 360 - movimiento; // Normalizar
-
-//         if (movimiento > 15.0)
-//         {
-//             Serial.printf("Kick suave exitoso. Movimiento total: %.2f°\n", movimiento);
-//             Serial.printf("Posición inicial: %.2f° -> Posición f_in1l: %.2f°\n", posicion_actual, posicion_post_kick);
-//             return true;
-//         }
-//         else
-//         {
-//             Serial.printf("Kick insuficiente (movimiento: %.2f°), reintentando...\n", movimiento);
-//             analogWrite(en, 0); // Asegurar que se detenga
-//             return false;
-//         }
-//     }
-// }
+    if (fabs(error) <= umbral_error) {
+        Serial.printf("Frenado controlado exitoso. Error: %.2f°\n", error);
+        return true;
+    } else {
+        Serial.printf("Error post-frenado: %.2f°\n", error);
+        return false;
+    }
+}
 
 void Motor::moverAGrados(double pos)
 {

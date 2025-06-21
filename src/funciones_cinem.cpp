@@ -4,46 +4,38 @@
 
 using namespace std;
 
-void cinematicaDirecta(array<double, 4> theta, array<double, 4> L){
+array<double, 3> cinematicaDirecta(array<double, 4> theta, array<double, 4> L,bool debug_all){
     // Conversión de ángulos (º -> rad)
     theta[0]=theta[0]*PI/180.0;
-    theta[1]=(theta[1]*PI/180.0)+PI/2;
+    theta[1]=(theta[1]*PI/180.0); // +PI/2;
     theta[2]=theta[2]*PI/180.0;
     theta[3]=theta[3]*PI/180.0;
-
-    // Parámetros de D-H
-    array<double, 5> a={-54, L[0], L[1], L[2], L[3]}; // Longitudes de eslabones
-    array<double, 5> alpha={0, PI / 2, 0, 0, 0};    // Ángulos entre ejes Z
-    array<double, 5> d={0, 0, 0, 0, 0};             // Traslaciones en Z (mecanismo plano = 0)
  
-    // Inicialización de la matriz de transformación como matriz identidad
-    Matriz::M4x4 T=Matriz::identidad();
-    
-    // Bucle de cálculo empleando la funcion dh de matrices.h
-    for (int i=0;i<4;i++){
-        Matriz::M4x4 Ti=Matriz::dh(-theta[i], a[i], alpha[i], d[i]);
-        T = Matriz::multiplicar(T, Ti);
-    }
+    double w1=L[1]*sin(theta[1])+54,z1=L[1]*cos(theta[1]);
+    double w2=w1+L[2]*sin(theta[1]+theta[2]),z2=z1+L[2]*cos(theta[1]+theta[2]);
+    double w3=w2,z3=z2-L[3];
 
-    // Añado el último eslabón a la matriz
-    Matriz::M4x4 T5 = Matriz::dh(0, a[4], 0, 0);
-    T=Matriz::multiplicar(T, T5);
+    double x0=0, y0=0, z0=L[0];
+    double x1=w1*sin(theta[0]), y1=w1*cos(theta[0]);
+    double x2=w2*sin(theta[0]), y2=w2*cos(theta[0]);
+    double x3=w3*sin(theta[0]), y3=w3*cos(theta[0]);
 
-    // Redondeos a 0 de la posición
-    double X=T.m[1][3];
-    if(abs(X)<1e-3){
-        X=0;
-    }
-    double Y=-T.m[0][3];
-    if(abs(Y)<1e-3){
-        Y=0;
-    }
-    double Z=-T.m[2][3];
-    if(abs(Z)<1e-3){
-        Z=0;
+    if (debug_all) {
+        // Imprimir solo desde modo TEST
+        printf("Theta: %.2lf, %.2lf, %.2lf, %.2lf\n", theta[0]*180/PI, theta[1]*180/PI, theta[2]*180/PI, theta[3]*180/PI);
+        printf("L: %.2lf, %.2lf, %.2lf, %.2lf\n", L[0], L[1], L[2], L[3]);
+        printf("WZ1=%.2lf,%.2lf\n",w1,z1);
+        printf("WZ2=%.2lf,%.2lf\n",w2,z2);
+        printf("WZ3=%.2lf,%.2lf\n",w3,z3);
+        printf("XYZ0=%.2lf,%.2lf,%.2lf\n",x0,y0,z0);
+        printf("XYZ1=%.2lf,%.2lf,%.2lf\n",x1,y1,z1);
+        printf("XYZ2=%.2lf,%.2lf,%.2lf\n",x2,y2,z2);
+        printf("XYZ3=%.2lf,%.2lf,%.2lf\n",x3,y3,z3);
     }
     
-    cout<<"\nPinza en coordenadas: [" << X << ", " << Y << ", " << Z << "]\n";
+    cout<<"\nPinza en coordenadas: [" << x3 << ", " << y3 << ", " << z3 << "]\n";
+
+    return {x3, y3, z3};
 }
 
 /*Cálculo de los ángulos necesarios en las articulaciones para alcanzar la
@@ -52,7 +44,6 @@ se trabaja en coordenadas W,Z y luego W se desdobla en X,Y según el ángulo de
 la base del robot. */
 array<double, 4> cinematicaInversa(array<double, 3> xyz, array<double, 4> L){
     array<double, 4> angulos;
-    xyz[3]+=80;
     // Posiciones de la muñeca del mecanismo plano W2,Z2. Theta2 con teorema del coseno
     float z2=xyz[2]+L[3];
     float w2=sqrt(xyz[0]*xyz[0]+xyz[1]*xyz[1]);
@@ -98,9 +89,6 @@ array<double, 4> GradosEncoder_a_Robot(const array<double, 4>& ang_enc,const arr
     printf("Angulos encoders: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_enc[0], ang_enc[1], ang_enc[2], ang_enc[3]);
     ang_robot[0]=ang_enc[0]+ang_calib[0];
     ang_robot[1]=ang_enc[1]+ang_calib[1];   // Hombro
-    // if(ang_enc[2]>180){
-    //     ang_enc[2]=ang_enc[2]-360;      // Normalizar ángulo del codo
-    // }
     ang_robot[2]=ang_enc[2]+ang_calib[2];   // Codo
     ang_robot[3]=ang_enc[3];                // Pinza   
     printf("Angulos robot: %.2lf, %.2lf, %.2lf, %.2lf\n", ang_robot[0], ang_robot[1], ang_robot[2], ang_robot[3]);

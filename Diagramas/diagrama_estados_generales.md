@@ -1,0 +1,16 @@
+stateDiagram-v2
+    direction TB
+    [*] --> INICIALIZANDO
+    INICIALIZANDO --> ESPERANDO
+    ESPERANDO --> TEST : "TEST"
+    ESPERANDO --> AJUSTE : "AJUSTE"
+    ESPERANDO --> MOVIENDO : "(x,y,z)"
+    MOVIENDO --> ESPERANDO : "Completo"
+    ESPERANDO --> DETENIDO : "DETENER"
+    ESPERANDO --> ERROR : "Comando inválido"
+    DETENIDO --> INICIALIZANDO
+    ERROR --> INICIALIZANDO
+    ESPERANDO --> INICIALIZANDO : "RESET"
+    AJUSTE --> ESPERANDO : "ESP"
+    TEST --> AJUSTE : "AJ"
+    TEST --> ESPERANDO : "ESP"
