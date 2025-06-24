@@ -71,12 +71,12 @@ void setup()
 {
     Serial.begin(115200);
     // Configuración Servidor WiFi
-    mutex_setup(); // Inicializar el mutex para proteger las medidas
-    delay(1000);
-    xTaskCreate(mantener_wifi, "Mantiene la conexión WiFi activa", 20000, NULL, 5, NULL); // Crear el hilo para mantener la conexión WiFi activa
-    printf("Tarea 1 lanzada\n");
-    xTaskCreate(recibir_mensaje, "Recibe e imprime por pantalla los datos enviados por el cliente", 20000, NULL, 5, NULL); // Crear el hilo para recibir mensajes
-    printf("Tarea 2 lanzada\n");
+    // mutex_setup(); // Inicializar el mutex para proteger las medidas
+    // delay(1000);
+    // xTaskCreate(mantener_wifi, "Mantiene la conexión WiFi activa", 20000, NULL, 5, NULL); // Crear el hilo para mantener la conexión WiFi activa
+    // printf("Tarea 1 lanzada\n");
+    // xTaskCreate(recibir_mensaje, "Recibe e imprime por pantalla los datos enviados por el cliente", 20000, NULL, 5, NULL); // Crear el hilo para recibir mensajes
+    // printf("Tarea 2 lanzada\n");
 
     // Inicialización bus SPI para los encoders
     SPI.begin();

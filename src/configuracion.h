@@ -19,8 +19,8 @@ enum class EstadoRobot
 };
 
 // Angulos maximos pinza
-const int pinza_abierta=120;
-const int pinza_cerrada=90;
+const int pinza_abierta=70;
+const int pinza_cerrada=110;
 #define _PIN_SERVO 4
 
 // Periodo de muestreo
